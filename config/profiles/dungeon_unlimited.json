@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "profile": {
+    "id": "dungeon_unlimited",
+    "display_name": "无冷却地下城",
+    "kind": "repeat"
+  },
+  "initial_state": "Entry",
+  "poll_seconds": 0.5,
+  "max_minutes": 0,
+  "max_rounds": 20,
+  "watchdog": {"warn_seconds": 30, "stop_seconds": 120, "repeat_warning_seconds": 30},
+  "interrupts": [
+    {"name": "确认游戏 timeout 提示", "template": "提示确认文字.png", "roi": [620, 365, 160, 90], "threshold": 0.94, "min_contrast_ratio": 0.65, "requires_match": {"template": "游戏timeout提示.png", "roi": [560, 280, 280, 110], "threshold": 0.94}, "foreground": true, "action": "click", "event": "none", "verify_change": true, "retry_center_clicks": 1, "retry_max_clicks": 2, "retry_radius": 0, "retry_wait_seconds": 1, "confirm_frames": 2, "cooldown_seconds": 5, "max_activations": 3},
+    {"name": "游戏会话过期", "template": "会话过期标题.png", "roi": [480, 225, 440, 180], "threshold": 0.95, "min_contrast_ratio": 0.65, "foreground": true, "action": "stop", "stop_message": "游戏会话已过期，需要手动重新登录，未继续点击后台目标", "confirm_frames": 2},
+    {"name": "领取任务完成奖励", "template": "任务领取奖励文字.png", "roi": [570, 505, 260, 110], "threshold": 0.95, "min_contrast_ratio": 0.65, "requires_match": {"template": "任务完成标题.png", "roi": [560, 85, 280, 90], "threshold": 0.95, "min_contrast_ratio": 0.65}, "foreground": true, "action": "click", "verify_change": true, "retry_center_clicks": 1, "retry_max_clicks": 2, "retry_radius": 0, "confirm_frames": 2, "cooldown_seconds": 2, "max_activations": 10}
+  ],
+  "states": {
+    "Entry": {"timeout_seconds": 180, "rules": [{"name": "每轮先进入地下城", "template": "地下城入口主体.png", "threshold": 0.92, "min_brightness_ratio": 0.65, "action": "click", "next": "SelectDungeon", "event": "none", "verify_change": false, "confirm_frames": 2, "cooldown_seconds": 1}, {"name":"入口领取已弹出的战利品","template":"战利品确认文字.png","roi":[500,400,400,150],"threshold":0.94,"min_contrast_ratio":0.65,"requires_match":{"template":"战利品弹窗标题.png","roi":[400,120,600,170],"threshold":0.9,"min_contrast_ratio":0.65},"foreground":true,"action":"click","verify_change":true,"retry_center_clicks":1,"retry_max_clicks":2,"retry_radius":0,"confirm_frames":2,"cooldown_seconds":1}]},
+    "SelectDungeon": {"timeout_seconds": 60, "rules": [
+      {"name": "选择目标副本", "template": "一本.png", "threshold": 0.95, "min_contrast_ratio": 0.65, "action": "click", "next": "Explore", "event": "none", "verify_change": true, "success_match": {"template": "去探险.png", "roi": [400, 460, 600, 150], "threshold": 0.95}, "retry_center_clicks": 2, "retry_max_clicks": 8, "retry_radius": 18, "retry_wait_seconds": 0.6, "confirm_frames": 2, "cooldown_seconds": 1},
+      {"name": "从普通关卡切回地下城", "template": "地下城入口主体.png", "threshold": 0.94, "min_contrast_ratio": 0.65, "requires_match": {"template": "普通关卡页标识.png", "roi": [140, 435, 245, 120], "threshold": 0.95, "min_contrast_ratio": 0.65}, "after_idle_seconds": 10, "action": "click", "next": "SelectDungeon", "verify_change": true, "success_match": {"template": "地下城列表标识.png", "roi": [140, 435, 245, 120], "threshold": 0.95, "min_contrast_ratio": 0.65}, "retry_center_clicks": 1, "retry_max_clicks": 2, "retry_radius": 0, "confirm_frames": 2},
+      {"name": "副本详情已经打开", "template": "去探险.png", "roi": [400, 460, 600, 150], "threshold": 0.95, "foreground": true, "action": "none", "next": "Explore", "confirm_frames": 2, "cooldown_seconds": 0.5},
+      {"name": "选择目标副本（高亮兼容）", "template": "一本高亮.png", "roi": [70, 100, 400, 470], "threshold": 0.94, "min_contrast_ratio": 0.65, "action": "click", "next": "Explore", "verify_change": true, "success_match": {"template": "去探险.png", "roi": [400, 460, 600, 150], "threshold": 0.95}, "confirm_frames": 2, "cooldown_seconds": 1}
+    ]},
+    "Explore": {"timeout_seconds": 60, "rules": [
+      {"name": "去探险", "template": "去探险.png", "threshold": 0.95, "foreground": true, "action": "click", "next": "Progress", "event": "round_start", "verify_change": true, "success_match": {"template": "副本入口标题.png", "roi": [550, 0, 300, 100], "threshold": 0.94}, "retry_center_clicks": 2, "retry_max_clicks": 8, "retry_radius": 18, "retry_wait_seconds": 0.6, "confirm_frames": 2, "cooldown_seconds": 2},
+      {"name": "入口仍在列表时重新选择副本", "template": "一本.png", "threshold": 0.95, "min_contrast_ratio": 0.65, "action": "click", "next": "Explore", "verify_change": true, "success_match": {"template": "去探险.png", "roi": [400, 460, 600, 150], "threshold": 0.95}, "confirm_frames": 3, "cooldown_seconds": 1},
+      {"name": "确认已进入副本入口房间", "template": "副本入口标题.png", "roi": [550, 0, 300, 100], "threshold": 0.94, "min_contrast_ratio": 0.65, "action": "none", "next": "Progress", "event": "round_start", "confirm_frames": 2, "cooldown_seconds": 1},
+      {"name": "入口高亮副本重新选择", "template": "一本高亮.png", "roi": [70, 100, 400, 470], "threshold": 0.94, "min_contrast_ratio": 0.65, "action": "click", "next": "Explore", "verify_change": true, "success_match": {"template": "去探险.png", "roi": [400, 460, 600, 150], "threshold": 0.95}, "confirm_frames": 3, "cooldown_seconds": 1}
+    ]},
+    "Progress": {
+      "timeout_seconds": 300,
+      "rules": [
+        {"name": "去下一层", "template": "去下一层.png", "min_brightness_ratio": 0.65, "min_contrast_ratio": 0.65, "threshold": 0.95, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 2},
+        {"name": "完成冒险", "template": "完成地下城.png", "min_contrast_ratio": 0.65, "threshold": 0.95, "action": "click", "next": "ReturnEntry", "event": "none", "verify_change": true, "success_match": {"template": "地下城列表标识.png", "roi": [140, 435, 245, 120], "threshold": 0.95, "min_contrast_ratio": 0.65}, "confirm_frames": 2, "cooldown_seconds": 2},
+        {"name": "未确认完成却返回地下城列表", "template": "地下城列表标识.png", "roi": [140, 435, 245, 120], "threshold": 0.95, "min_contrast_ratio": 0.65, "foreground": true, "action": "stop", "stop_message": "当前已回到地下城列表，但没有待确认的完成冒险操作；本轮不计成功，请检查是否中途退出", "confirm_frames": 3},
+        {"name":"进入技能卡房间","template":"技能卡.png","threshold":0.9,"action":"click","next":"SkillCardSelect","event":"none","verify_change":true,"confirm_frames":2,"cooldown_seconds":1,"success_match":{"template":"选择技能卡.png","roi":[550,360,300,220],"threshold":0.96,"min_contrast_ratio":0.65}},
+        {"name":"进入技能卡房间（牌面主体兼容）","template":"技能卡牌面主体.png","threshold":0.94,"action":"click","next":"SkillCardSelect","event":"none","verify_change":true,"confirm_frames":2,"cooldown_seconds":1,"success_match":{"template":"选择技能卡.png","roi":[550,360,300,220],"threshold":0.96,"min_contrast_ratio":0.65},"roi":[900,230,320,290],"offset":[0,55],"min_contrast_ratio":0.65},
+        {"name":"进入技能卡房间（牌面姿态兼容）","template":"技能卡牌面主体变体.png","threshold":0.94,"action":"click","next":"SkillCardSelect","event":"none","verify_change":true,"confirm_frames":2,"cooldown_seconds":1,"success_match":{"template":"选择技能卡.png","roi":[550,360,300,220],"threshold":0.96,"min_contrast_ratio":0.65},"roi":[900,230,320,290],"offset":[0,55],"min_contrast_ratio":0.65},
+        {"name": "进入开局 Buff 房间", "template": "开局buff.png", "threshold": 0.95, "action": "click", "next": "OpeningBuff", "event": "none", "verify_change": true, "success_match": {"template": "经验buff.png", "threshold": 0.95}, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "进入开局 Buff 房间（高亮兼容）", "template": "开局buff高亮.png", "roi": [880, 200, 350, 330], "threshold": 0.94, "min_contrast_ratio": 0.65, "requires_match": {"template": "副本入口标题.png", "roi": [550, 0, 300, 100], "threshold": 0.94}, "action": "click", "next": "OpeningBuff", "verify_change": true, "success_match": {"template": "经验buff.png", "threshold": 0.95}, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "经验 Buff 选择页已经打开", "roi": [200,200,1000,360], "template": "经验buff.png", "threshold": 0.95, "foreground": true, "action": "none", "next": "OpeningBuff", "confirm_frames": 2, "cooldown_seconds": 0.5},
+        {"name":"确认宝箱奖励（可变宽度）","template":"战利品确认文字.png","roi":[500,400,400,150],"threshold":0.94,"min_contrast_ratio":0.65,"requires_match":{"template":"战利品弹窗标题.png","roi":[400,120,600,170],"threshold":0.9,"min_contrast_ratio":0.65},"foreground":true,"action":"click","next":"Progress","verify_change":true,"retry_center_clicks":2,"retry_max_clicks":6,"retry_radius":8,"confirm_frames":2,"cooldown_seconds":1,"preserve_pending":true},
+        {"name":"确认领取宝箱","roi":[350,350,700,210],"template":"确认领取宝箱.png","foreground":true,"threshold":0.96,"action":"click","next":"Progress","event":"none","verify_change":true,"confirm_frames":2,"cooldown_seconds":1,"preserve_pending":true},
+        {"name":"领取宝箱","roi":[350,350,700,210],"template":"领取宝箱.png","foreground":true,"threshold":0.96,"action":"click","next":"Progress","event":"none","verify_change":true,"confirm_frames":2,"cooldown_seconds":1,"preserve_pending":true},
+        {"name": "打开宝箱", "template": "宝箱主体.png", "threshold": 0.90, "offset": [2, -2], "min_brightness_ratio": 0.65, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "retry_center_clicks": 2, "retry_max_clicks": 8, "retry_radius": 18, "retry_wait_seconds": 0.6, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "领取战利品后继续", "roi": [350,350,700,210], "template": "战斗结束领取战利品.png", "foreground": true, "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "increment_counter": "battles_completed", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 2},
+        {"name": "领取战利品后继续（宽弹窗兼容）", "template": "战利品继续文字.png", "roi": [500, 400, 400, 150], "threshold": 0.90, "min_brightness_ratio": 0.65, "requires_match": {"template": "战利品弹窗标题.png", "roi": [400, 120, 600, 170], "threshold": 0.90, "min_brightness_ratio": 0.65}, "foreground": true, "action": "click", "next": "Progress", "event": "none", "increment_counter": "battles_completed", "verify_change": true, "retry_center_clicks": 2, "retry_max_clicks": 6, "retry_radius": 8, "retry_wait_seconds": 0.6, "confirm_frames": 2, "cooldown_seconds": 2},
+        {"name": "战斗结束继续", "roi": [350,350,700,210], "template": "战斗结束.png", "foreground": true, "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 2},
+        {"name": "开启自动战斗", "template": "自动战斗.png", "threshold": 0.95, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 2},
+        {"name": "不选择 Buff 并离开", "roi": [400,180,600,330], "template": "离开祝福弹窗.png", "offset": [74, 72], "foreground": true, "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "选择随机 Buff", "template": "选择buff.png", "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "确认随机 Buff", "roi": [400,320,600,200], "template": "确认buff.png", "foreground": true, "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "关闭当前奖励面板", "roi": [850,50,400,300], "template": "关闭buff.png", "foreground": true, "threshold": 0.97, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1}
+      ]
+    },
+    "OpeningBuff": {
+      "timeout_seconds": 120,
+      "rules": [
+        {"name":"选择经验 Buff","template":"经验buff.png","threshold":0.95,"action":"click","offset":[0,99],"next":"OpeningBuffConfirm","event":"none","confirm_frames":2,"cooldown_seconds":1,"verify_change":true,"min_contrast_ratio":0.65,"retry_center_clicks":2,"retry_max_clicks":4,"retry_radius":8,"retry_wait_seconds":1,"success_match":{"template":"确认buff.png","roi":[400,320,600,200],"threshold":0.96,"min_contrast_ratio":0.65}}
+      ]
+    },
+    "OpeningBuffConfirm": {
+      "timeout_seconds": 60,
+      "rules": [
+        {"name": "确认经验 Buff", "template": "确认buff.png", "threshold": 0.96, "action": "click", "next": "OpeningBuffClose", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1}
+      ]
+    },
+    "OpeningBuffClose": {
+      "timeout_seconds": 60,
+      "rules": [
+        {"name": "领取后关闭 Buff 页面", "template": "关闭技能卡.png", "threshold": 0.97, "action": "click", "next": "OpeningBuffLeaveConfirm", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1}
+      ]
+    },
+    "OpeningBuffLeaveConfirm": {
+      "timeout_seconds": 60,
+      "rules": [
+        {"name": "确认放弃剩余 Buff", "template": "离开祝福弹窗.png", "offset": [74, 72], "foreground": true, "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "无确认框时直接去下一层", "template": "去下一层.png", "min_brightness_ratio": 0.65, "min_contrast_ratio": 0.65, "threshold": 0.95, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 2}
+      ]
+    },
+    "SkillCardSelect": {
+      "timeout_seconds": 120,
+      "rules": [
+        {"name": "选择中间免费技能卡", "template": "选择技能卡.png", "threshold": 0.96, "roi": [550, 360, 300, 220], "action": "click", "next": "SkillCardClaimConfirm", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1}
+      ]
+    },
+    "SkillCardClaimConfirm": {
+      "timeout_seconds": 60,
+      "rules": [
+        {"name": "确认领取技能卡", "template": "确认领取技能卡.png", "threshold": 0.96, "action": "click", "next": "SkillCardClose", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1}
+      ]
+    },
+    "SkillCardClose": {
+      "timeout_seconds": 60,
+      "rules": [
+        {"name": "领取后关闭技能卡页面", "template": "关闭技能卡.png", "threshold": 0.97, "action": "click", "next": "SkillCardLeaveConfirm", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1}
+      ]
+    },
+    "SkillCardLeaveConfirm": {
+      "timeout_seconds": 60,
+      "rules": [
+        {"name": "确认放弃剩余技能卡", "template": "不要剩余技能卡确定离开.png", "foreground": true, "threshold": 0.96, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 1},
+        {"name": "无确认框时直接去下一层", "template": "去下一层.png", "min_brightness_ratio": 0.65, "min_contrast_ratio": 0.65, "threshold": 0.95, "action": "click", "next": "Progress", "event": "none", "verify_change": true, "confirm_frames": 2, "cooldown_seconds": 2}
+      ]
+    },
+    "ReturnEntry": {"timeout_seconds": 180, "rules": [
+      {"name": "确认已回到目标副本入口", "template": "一本.png", "threshold": 0.95, "min_contrast_ratio": 0.65, "action": "none", "next": "Entry", "event": "round_end", "confirm_frames": 2, "cooldown_seconds": 1},
+      {"name": "确认冒险结束已返回主导航", "template": "地下城入口主体.png", "threshold": 0.92, "min_brightness_ratio": 0.65, "min_contrast_ratio": 0.65, "action": "none", "next": "Entry", "event": "round_end", "confirm_frames": 2, "cooldown_seconds": 1}
+    ]}
+  }
+}

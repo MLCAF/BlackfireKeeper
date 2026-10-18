@@ -1,0 +1,6 @@
+# Verified Windows x64 / CPython 3.12 environment.
+MaaFw==5.13.1
+MaaAgentBinary==1.0.1
+numpy==2.5.3
+Pillow==11.3.0
+StrEnum==0.4.15

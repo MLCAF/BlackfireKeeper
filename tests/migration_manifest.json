@@ -1,0 +1,354 @@
+[
+  {
+    "target": "vendor_core/backend.py",
+    "sha256": "f27e2aad16022f28c0b7bcb4333dc3691270bd384e7ae3d37631a1d2d52d1ef6"
+  },
+  {
+    "target": "vendor_core/config.py",
+    "sha256": "2c51ba515f11fcf7cf67bddba90475a9d6e4d4aa3961bddd4672c5c08828a8ae"
+  },
+  {
+    "target": "vendor_core/runner.py",
+    "sha256": "3779ce7eab9d3db4bdeb868f0e6d8ec7e7bab72e61afb729c62085e6d121d249"
+  },
+  {
+    "target": "vendor_core/windows.py",
+    "sha256": "5ac16eeadbb5440579ebafa76693a5c9d9907b3143a9cc969740055bf10ffeeb"
+  },
+  {
+    "target": "vendor_core/watchdog.py",
+    "sha256": "15c9f8be9046564b8f7dbe8897c3b999f2b39dfa00c334c83695a2d52e7359dd"
+  },
+  {
+    "target": "vendor_core/unified.py",
+    "sha256": "c232f38730ddbc2bd34cb6b2194a296d91ba47cf3335f1521a17b86c98ae77cb"
+  },
+  {
+    "target": "vendor_core/cooldown.py",
+    "sha256": "dce48d700231d56435ff9959f75af233b635e27f0fb2936024e356321e758b14"
+  },
+  {
+    "target": "vendor_core/diamonds.py",
+    "sha256": "0796d2d6bef50d5c54655025450c72365bd1717911c5f796e6dd965ace37beb7"
+  },
+  {
+    "target": "vendor_core/list_cooldown.py",
+    "sha256": "37262c3c675a92ecee174167aa183e2d972939c6ace1c7baf83d9e46b2e0fefc"
+  },
+  {
+    "target": "assets/image/.gitkeep",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "target": "assets/image/一本.png",
+    "sha256": "0ba1d9ee5e64e5281187e51bfd2fcb097afd7d286aa995fa45f9fe83636e41a1"
+  },
+  {
+    "target": "assets/image/一本名称.png",
+    "sha256": "4401b3101734582fa66fdc355d50d7ef3eba0116a8e1854c461e53774b8200e0"
+  },
+  {
+    "target": "assets/image/一本高亮.png",
+    "sha256": "2b426da96eeecc1063892992c6377457eee79eb75cc825fda2bda41fd31567fa"
+  },
+  {
+    "target": "assets/image/三本.png",
+    "sha256": "c20df66699174196cb62648f68789f45c0919cd3e909ead18b7be99b0fd7c8e6"
+  },
+  {
+    "target": "assets/image/三本名称.png",
+    "sha256": "2c9c98879c0c7f391035d51f44a7cd35ab4a5015b8590d00eb69a636af18919d"
+  },
+  {
+    "target": "assets/image/不要buff确定离开.png",
+    "sha256": "85f1eb0d20e144133542c8b674c1b67ad096749a858175555facdf70b0721094"
+  },
+  {
+    "target": "assets/image/不要剩余技能卡确定离开.png",
+    "sha256": "981d43a4680a9a7b1c1d6f90e82737fdba347150f57d76fcff6642c2d924bdb3"
+  },
+  {
+    "target": "assets/image/主界面.png",
+    "sha256": "660cb1746036235039adab2c0399811b7404349e4ef3fd584e9e1c8cb7d2ce7c"
+  },
+  {
+    "target": "assets/image/主界面锚点.png",
+    "sha256": "159fa1fd0b310ef5c2855f0e29e1c53fae8a5d679c3ade1db358bdc8892a0132"
+  },
+  {
+    "target": "assets/image/二本.png",
+    "sha256": "e6a3788ed06558beaa98e740f8ff77d31e8ceb0b553a01f66005ba7bbc0444a5"
+  },
+  {
+    "target": "assets/image/二本名称.png",
+    "sha256": "b53b88a856e52cef2289f69626a058b22d7d37d96fa626630e00988b6a5c92ed"
+  },
+  {
+    "target": "assets/image/五本.png",
+    "sha256": "7d52b0d24d7501977feb3fa88ccdae6b92d21bad88e7fec19eb7381c5aac2d9a"
+  },
+  {
+    "target": "assets/image/五本名称.png",
+    "sha256": "1dae4b1dc915a4ab0bea9780336f573a502b0848b0b8470093819570c50a237a"
+  },
+  {
+    "target": "assets/image/任务完成标题.png",
+    "sha256": "40c2ab89076e351c73896c93789d3266aa0eb84903bbe4a9032ab80ff785681a"
+  },
+  {
+    "target": "assets/image/任务领取奖励文字.png",
+    "sha256": "f0501d4d66ef6d84ad89754503f0cf68fc95cd5749e611fbe3573d98d2468027"
+  },
+  {
+    "target": "assets/image/会话过期标题.png",
+    "sha256": "86b62ddf573f44f34c51b21de0bb76b446f7a2a2005fd53fd5be2e22bb848fbb"
+  },
+  {
+    "target": "assets/image/传送门.png",
+    "sha256": "49106a9849d7691d8a2ba9430b707ed23bb814725d271446807d3829cf2f8ac8"
+  },
+  {
+    "target": "assets/image/伤害buff.png",
+    "sha256": "1656f3376f96eb4f78ce9eb89ec2f29e84e383da4d9d8871973984d368b87a20"
+  },
+  {
+    "target": "assets/image/六本.png",
+    "sha256": "96c932a3b41a1914cb407cb9bb73e589844d8269e9731b21a6c94bfc872cae9d"
+  },
+  {
+    "target": "assets/image/六本名称.png",
+    "sha256": "c9d037ff16b0eb94028c872084ed689e8e6b326f2bbe10540eebda0194ef9b09"
+  },
+  {
+    "target": "assets/image/关闭.png",
+    "sha256": "3ac22e5d04b691c6059ec0e13e28c54681ccaea9954735eef482e973e4a7edb5"
+  },
+  {
+    "target": "assets/image/关闭buff.png",
+    "sha256": "3ac22e5d04b691c6059ec0e13e28c54681ccaea9954735eef482e973e4a7edb5"
+  },
+  {
+    "target": "assets/image/关闭技能卡.png",
+    "sha256": "3ac22e5d04b691c6059ec0e13e28c54681ccaea9954735eef482e973e4a7edb5"
+  },
+  {
+    "target": "assets/image/列表三本可用.png",
+    "sha256": "02b48b57f1bdb372b55c3ef771e0ebaf07f14f4f4f81737fd35dafed60bf97fe"
+  },
+  {
+    "target": "assets/image/列表二本可用.png",
+    "sha256": "400a72bf86c1cbe57a436f7ac3933772ed36f78b80746ccd9d4c1dfda9fb7ec3"
+  },
+  {
+    "target": "assets/image/列表五本可用.png",
+    "sha256": "2293e77aa1b788c91f60c6fb451b2d6fe69ed493ce6fa2a6dc5e8aa45737cd12"
+  },
+  {
+    "target": "assets/image/列表四本可用.png",
+    "sha256": "23a3808eed52a72622985a6a6c9d3be8546db5148cac08175e96da01f4572a58"
+  },
+  {
+    "target": "assets/image/副本入口标题.png",
+    "sha256": "82b4dadfb9722433a720976a59ddb7aebc1717257afa0f7012019c37087a4a60"
+  },
+  {
+    "target": "assets/image/副本入口进度.png",
+    "sha256": "635a6d5b22e9b7db0ef05172e45589c730ea3788981f28ff70947c5100686982"
+  },
+  {
+    "target": "assets/image/副本冷却付费标识.png",
+    "sha256": "edd6eb956542f620c96f578ab1681557157b9a3fd3e692db93027cdbeccf92a4"
+  },
+  {
+    "target": "assets/image/副本详情关闭.png",
+    "sha256": "eda76efc0c3ad9fd052e66c0784e335e8b3cb18fd40645765ae009645d443b74"
+  },
+  {
+    "target": "assets/image/副本详情标识.png",
+    "sha256": "fe81bbae540e19a067f29169f9b01ff94417994fed0fa5e6e0ad74b4f9f62cd3"
+  },
+  {
+    "target": "assets/image/去下一层.png",
+    "sha256": "63dd26d1d4d939989c23196719ef1c8c47495a5f66c8aca315df908906565f2e"
+  },
+  {
+    "target": "assets/image/去探险.png",
+    "sha256": "f5692e68e4e7a5cb7c9a7441669ac448e99351e8aaf5ce99ad469522dc9054fb"
+  },
+  {
+    "target": "assets/image/四本.png",
+    "sha256": "c560ac3cc3398470b89f566fdfbd7fbb930b58482027c00f33ddb90f8f165618"
+  },
+  {
+    "target": "assets/image/四本名称.png",
+    "sha256": "7174eea3519fe738c7c15bf1356812a0d98d1717079cbea632955c79f06a2b79"
+  },
+  {
+    "target": "assets/image/地下城入口主体.png",
+    "sha256": "acb03031e938eccc04e4ac9fe67150e1fa6427ad47ed5af5b722e8c80c74c53f"
+  },
+  {
+    "target": "assets/image/地下城列表标识.png",
+    "sha256": "6fed45f35036da9cf35aa843a4952f40d1045ea8cbed02dcbef48f051bd75c70"
+  },
+  {
+    "target": "assets/image/地下城列表通用标识.png",
+    "sha256": "ccde2924fa5c7096742a707134f751c830f7bc669e4136316b4d0d2900b5db1c"
+  },
+  {
+    "target": "assets/image/城镇.png",
+    "sha256": "41d2806d64a3bb86a1dcf7d9a6585590ad29a82da678aeea9d784e31221d2f9c"
+  },
+  {
+    "target": "assets/image/完成地下城.png",
+    "sha256": "1ff116beb82ced87638da70019b94f298fcd29f16a30a5dba02f7c9d11b91ccf"
+  },
+  {
+    "target": "assets/image/宝箱.png",
+    "sha256": "3feb2a78ee51ff48c2cd89d322b667d2c27c8d42b9d837ab9bae4daa135167ad"
+  },
+  {
+    "target": "assets/image/宝箱主体.png",
+    "sha256": "5ca9b81dd55eca33d976be5de83f690492100e02fe4c993ab1081b53e95f4185"
+  },
+  {
+    "target": "assets/image/开局buff.png",
+    "sha256": "8e479dfa730ffe2e6c384079ce3402e9a91d583fa40c4ab8633ece917b9de295"
+  },
+  {
+    "target": "assets/image/开局buff高亮.png",
+    "sha256": "292671da9bf879adc249d5c37de286b939ce4b109f46f578b69d72d2404299be"
+  },
+  {
+    "target": "assets/image/战利品弹窗标题.png",
+    "sha256": "c991f76f789e53098a4369553f2e6a0088a6ef6c1dd265777ccd22952d03b070"
+  },
+  {
+    "target": "assets/image/战利品确认文字.png",
+    "sha256": "ff597fcb29ada6fde95327a0d5ba5dea44313acf063e879bcb50fa4531851bce"
+  },
+  {
+    "target": "assets/image/战利品继续文字.png",
+    "sha256": "ab19417f6b7eca3cece3a98053f1144ec8c3a2d8dac2ae20382831e1826c5cb4"
+  },
+  {
+    "target": "assets/image/战斗结束.png",
+    "sha256": "1359e9fbc6bca5c522b7b83facf182d54407280c54d56fd700a553c2e132b5be"
+  },
+  {
+    "target": "assets/image/战斗结束领取战利品.png",
+    "sha256": "a5e3db311f126ef03f8fc6ad46a61b8a39e764d1692c90bccf7188580060abe3"
+  },
+  {
+    "target": "assets/image/技能卡.png",
+    "sha256": "0bbee38af8763c469ee1e54e62c07673648161103f404d2cec1a3564376eede0"
+  },
+  {
+    "target": "assets/image/技能卡牌面主体.png",
+    "sha256": "0e45a326b7f77216f15bbf4f8ad78c9dbc8fc451a5abddb8f7cf0ef1d2ffff45"
+  },
+  {
+    "target": "assets/image/技能卡牌面主体变体.png",
+    "sha256": "2346480346a2978f01076c52f9a8645d30db789f0193808fb00e3e7532c7256e"
+  },
+  {
+    "target": "assets/image/提示确认文字.png",
+    "sha256": "97cc5522f8d970715fee7a969aa275e110fee491a71a66ddae74480ad8bef8a8"
+  },
+  {
+    "target": "assets/image/普通关卡页标识.png",
+    "sha256": "581fd3bfb3791f8446bc9d8a9de8a92615b2789deec644fc162d2b66131e6bb2"
+  },
+  {
+    "target": "assets/image/游戏timeout提示.png",
+    "sha256": "3fbc7035c7629fefe112ae417675b161520796c1b50d907c7e7e0726f609411d"
+  },
+  {
+    "target": "assets/image/确认buff.png",
+    "sha256": "c1b7a78267b38f6e16b940037a9989c1ae8ee2a8177985999218a3bf75d87ae4"
+  },
+  {
+    "target": "assets/image/确认领取宝箱.png",
+    "sha256": "d45252fe5976390ff5beb899bead4db9edb41019d40ec81996bea901c8b74572"
+  },
+  {
+    "target": "assets/image/确认领取技能卡.png",
+    "sha256": "a2776cc227e88738606dfba578d8800d329d4738b3549c057e744e71a53ccd27"
+  },
+  {
+    "target": "assets/image/离开祝福弹窗.png",
+    "sha256": "9b2b143a3c95064947ca575873be7c5c98a6259ae3dd3bdf5068d06f702b7ec2"
+  },
+  {
+    "target": "assets/image/经验buff.png",
+    "sha256": "daa15b7efe2acfdbb871a042b25af597921f723e5f8544488218d3b8109dd203"
+  },
+  {
+    "target": "assets/image/自动战斗.png",
+    "sha256": "74f6550e86c6b5932d2648e75ac5d17c9b5a3121d1c7876269adddb347a31764"
+  },
+  {
+    "target": "assets/image/选择buff.png",
+    "sha256": "7154307ac47f258ffb3fda2e855ca6808c41a2df473860f9cb7882b32761e574"
+  },
+  {
+    "target": "assets/image/选择技能卡.png",
+    "sha256": "974fd1b2c1d1835328bb63a6bcfca29228ced7fa69465cf597e264a0f889baf5"
+  },
+  {
+    "target": "assets/image/钻石.png",
+    "sha256": "a6385303eeec7137169cde07ded88e3a3094a3c46b03119c76e1023d2908a35d"
+  },
+  {
+    "target": "assets/image/钻石20奖励.png",
+    "sha256": "ab53d8e6790e33eaf7a039da50eea041ad3970fdc0f77ee26aecf373b778a0ba"
+  },
+  {
+    "target": "assets/image/钻石免费包标识.png",
+    "sha256": "442b78c639ba2d09f16a72e38fb7fdc3d31ecaa7a1f796b4edf61338ef938bb0"
+  },
+  {
+    "target": "assets/image/钻石免费按钮.png",
+    "sha256": "de5628205d392a12449bf14d56a94581aaab4b03c7954c8be447fa22f43f3bba"
+  },
+  {
+    "target": "assets/image/钻石商店关闭.png",
+    "sha256": "f619e28565d5822f4849547792e21ca8db02c06ab68b23c245cda36b0c384f4f"
+  },
+  {
+    "target": "assets/image/钻石奖励确认.png",
+    "sha256": "01745ebe618fee0e9ca5a105b61790c94d2471474ee875afa425502a8bf50f74"
+  },
+  {
+    "target": "assets/image/领取宝箱.png",
+    "sha256": "f9348a8c6ae4046006f306c16ff092b4b6b8ab757cd98e1d43cee1022fbf7534"
+  },
+  {
+    "target": "assets/pipeline/base.json",
+    "sha256": "5e2af75067ea62cffcfea73575262f038a2a49632cb411a08162896c480cce2d"
+  },
+  {
+    "target": "assets/model/ocr/cooldown/det.onnx",
+    "sha256": "d2a7720d45a54257208b1e13e36a8479894cb74155a5efe29462512d42f49da9"
+  },
+  {
+    "target": "assets/model/ocr/cooldown/keys.txt",
+    "sha256": "28b2362ad4ab2dc38769aa72feb535e3a9ddb3fd2a7585a05920e6393b1dc7f7"
+  },
+  {
+    "target": "assets/model/ocr/cooldown/rec.onnx",
+    "sha256": "48fc40f24f6d2a207a2b1091d3437eb3cc3eb6b676dc3ef9c37384005483683b"
+  },
+  {
+    "target": "assets/model/ocr/cooldown/SOURCE.md",
+    "sha256": "b8d5c9e08f97a667693365572132aafcde371b79ad1356cea9a0bff4040873a9"
+  },
+  {
+    "target": "config/profiles/dungeon_unlimited.json",
+    "sha256": "bf96f5e40b2ff5d9b512330011bcf39c5ca40f1bdebda10b0cc50fd450400c1c"
+  },
+  {
+    "target": "config/profiles/diamonds.json",
+    "sha256": "c1a3bcaa5efee750a8563f89f5946799c8ec2c626517069935bf51ee8e478a41"
+  }
+]

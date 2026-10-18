@@ -1,0 +1,90 @@
+{
+  "version": 2,
+  "scheduler": "unified_dungeon",
+  "max_total_runs": 20,
+  "food": {
+    "enabled": true,
+    "interval_seconds": 1800
+  },
+  "run_control": {
+    "mode": "stamina",
+    "minimum_stamina": 150
+  },
+  "diamonds": {
+    "enabled": true,
+    "interval_seconds": 7200,
+    "run_on_start": false
+  },
+  "tasks": [
+    {
+      "id": "dungeon_1",
+      "display_name": "一本",
+      "order": 1,
+      "enabled": false,
+      "entrance_template": "一本名称.png",
+      "cooldown_seconds": 0,
+      "fallback": true,
+      "buff": "experience"
+    },
+    {
+      "id": "dungeon_2",
+      "display_name": "二本",
+      "order": 2,
+      "enabled": false,
+      "entrance_template": "二本名称.png",
+      "cooldown_seconds": 300,
+      "fallback": false,
+      "buff": "experience"
+    },
+    {
+      "id": "dungeon_3",
+      "display_name": "三本",
+      "order": 3,
+      "enabled": true,
+      "entrance_template": "三本名称.png",
+      "cooldown_seconds": 900,
+      "fallback": false,
+      "buff": "experience"
+    },
+    {
+      "id": "dungeon_4",
+      "display_name": "四本",
+      "order": 4,
+      "enabled": true,
+      "entrance_template": "四本名称.png",
+      "cooldown_seconds": 1200,
+      "fallback": false,
+      "buff": "experience"
+    },
+    {
+      "id": "dungeon_5",
+      "display_name": "五本",
+      "order": 5,
+      "enabled": true,
+      "entrance_template": "五本名称.png",
+      "cooldown_seconds": 1500,
+      "fallback": false,
+      "buff": "damage"
+    },
+    {
+      "id": "dungeon_6",
+      "display_name": "六本",
+      "order": 6,
+      "enabled": true,
+      "entrance_template": "六本名称.png",
+      "cooldown_seconds": 1800,
+      "fallback": false,
+      "buff": "damage"
+    },
+    {
+      "id": "dungeon_7",
+      "display_name": "七本（待补入口图）",
+      "order": 7,
+      "enabled": false,
+      "entrance_template": null,
+      "cooldown_seconds": 2100,
+      "fallback": false,
+      "buff": "experience"
+    }
+  ]
+}

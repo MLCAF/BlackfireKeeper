@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "profile": {"id":"diamonds","display_name":"自动领取免费钻石","kind":"one_shot"},
+  "initial_state":"ReturnHome","max_minutes":3,"max_rounds":0,"poll_seconds":0.5,
+  "watchdog":{"warn_seconds":20,"stop_seconds":60,"repeat_warning_seconds":20},
+  "states": {
+    "ReturnHome":{"timeout_seconds":60,"rules":[
+      {"name":"恢复待确认的20钻石奖励","template":"钻石20奖励.png","threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"action":"none","next":"Reward","foreground":true,"confirm_frames":2},
+      {"name":"已在免费钻石商店","template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"action":"none","next":"InspectPack","confirm_frames":2},
+      {"name":"已到主界面","template":"主界面锚点.png","threshold":0.94,"min_contrast_ratio":0.65,"action":"none","next":"OpenDiamond","confirm_frames":2},
+      {"name":"点击城镇返回主界面","template":"城镇.png","threshold":0.95,"min_contrast_ratio":0.65,"action":"click","next":"OpenDiamond","verify_change":true,"success_match":{"template":"主界面锚点.png","threshold":0.94,"min_contrast_ratio":0.65},"retry_max_clicks":2,"retry_center_clicks":1,"retry_radius":0,"confirm_frames":2}
+    ]},
+    "OpenDiamond":{"timeout_seconds":60,"rules":[
+      {"name":"打开钻石商店","template":"钻石.png","threshold":0.95,"min_contrast_ratio":0.65,"requires_match":{"template":"主界面锚点.png","threshold":0.94},"action":"click","verify_change":true,"success_match":{"template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75},"retry_max_clicks":2,"retry_center_clicks":1,"retry_radius":0,"next":"InspectPack","confirm_frames":2},
+      {"name":"商店已打开","template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"action":"none","next":"InspectPack","confirm_frames":2}
+    ]},
+    "InspectPack":{"timeout_seconds":45,"rules":[
+      {"name":"发现20钻石奖励弹窗","template":"钻石20奖励.png","threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"action":"none","next":"Reward","foreground":true,"confirm_frames":2},
+      {"name":"领取免费钻石包","template":"钻石免费按钮.png","roi":[210,480,340,90],"threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"requires_match":{"template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75},"action":"click","verify_change":true,"success_match":{"template":"钻石20奖励.png","threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75},"retry_max_clicks":2,"retry_center_clicks":1,"retry_radius":0,"next":"Reward","confirm_frames":2},
+      {"name":"读取免费钻石剩余冷却","template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"action":"none","event":"diamond_timer","next":"CloseShop","confirm_frames":2}
+    ]},
+    "Reward":{"timeout_seconds":45,"rules":[
+      {"name":"确认获得20钻石","template":"钻石奖励确认.png","roi":[450,420,500,115],"threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"requires_match":{"template":"钻石20奖励.png","threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75},"action":"click","verify_change":true,"success_match":{"template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75},"retry_max_clicks":2,"retry_center_clicks":1,"retry_radius":0,"increment_counter":"diamond_rewards","next":"InspectPack","foreground":true,"confirm_frames":2}
+    ]},
+    "CloseShop":{"timeout_seconds":30,"rules":[
+      {"name":"关闭钻石商店返回主界面","template":"钻石商店关闭.png","threshold":0.96,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75,"requires_match":{"template":"钻石免费包标识.png","threshold":0.95,"min_contrast_ratio":0.75,"min_brightness_ratio":0.75},"action":"click","verify_change":true,"success_match":{"template":"主界面锚点.png","threshold":0.94,"min_contrast_ratio":0.65},"retry_max_clicks":2,"retry_center_clicks":1,"retry_radius":0,"event":"task_complete","confirm_frames":2},
+      {"name":"商店已关闭并确认主界面","template":"主界面锚点.png","threshold":0.94,"min_contrast_ratio":0.65,"action":"none","event":"task_complete","confirm_frames":2}
+    ]}
+  }
+}

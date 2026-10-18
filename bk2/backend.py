@@ -1,0 +1,98 @@
+"""Keep recognition evidence across the watchdog's capture-before-match boundary."""
+import copy
+import json
+import time
+from pathlib import Path
+
+from vendor_core.backend import MaaBackend
+
+
+class DiagnosticBackend(MaaBackend):
+    CAPTURE_RECOVERY_SECONDS = 6.0
+    CAPTURE_MAX_ATTEMPTS = 30
+
+    def capture(self, stop):
+        # Upstream clears recognition_trace when capturing. The watchdog may save
+        # immediately after that capture, before any rules have been evaluated.
+        if self.recognition_trace and self.last_image is not None:
+            self._previous_recognition = copy.deepcopy(self.recognition_trace)
+            self._previous_image = self.last_image.copy()
+            self._previous_capture = self.last_capture
+        return self._capture_valid(stop)
+
+    def _capture_valid(self, stop):
+        started = time.monotonic()
+        deadline = started + self.CAPTURE_RECOVERY_SECONDS
+        health = self.capture_health = dict(attempts=0, rejected_frames=0,
+            consecutive_valid=0, status='capturing', elapsed_seconds=0.)
+        self.guard()
+        if self.capture_method == 'ScreenDC':
+            self.win.foreground(self.window.hwnd)
+        for attempt in range(self.CAPTURE_MAX_ATTEMPTS):
+            if stop.is_set():
+                raise InterruptedError('截图等待已停止')
+            self.guard()
+            remaining = deadline-time.monotonic()
+            if remaining <= 0:
+                break
+            # A blank image must invalidate the preceding click coordinates.
+            self.last_shape = None
+            job = self.controller.post_screencap()
+            self.wait(job, stop, timeout=remaining)
+            self.guard()
+            if not job.succeeded:
+                raise RuntimeError('截图失败，请切换 FramePool / ScreenDC')
+            image = job.get()
+            if image is None or image.ndim != 3 or min(image.shape[:2]) < 64:
+                raise RuntimeError('截图为空或尺寸异常')
+            self.last_image = image.copy()
+            self.recognition_trace = []
+            self.last_capture_attempt = time.monotonic()
+            health['attempts'] = attempt+1
+            health['elapsed_seconds'] = round(time.monotonic()-started, 4)
+            if self.is_nearly_uniform(image):
+                health['rejected_frames'] += 1
+                health['consecutive_valid'] = 0
+                health['status'] = 'waiting_for_valid_frames'
+                if health['rejected_frames'] == 1:
+                    getattr(self,'emit',lambda *args:None)('log',
+                        '截图出现纯色画面，暂停点击并等待恢复（最多 6 秒；连续两帧有效后继续）')
+            else:
+                health['consecutive_valid'] += 1
+                if health['consecutive_valid'] >= (2 if health['rejected_frames'] else 1):
+                    if time.monotonic() >= deadline:
+                        break
+                    health['status'] = 'recovered' if health['rejected_frames'] else 'valid'
+                    self.last_shape = image.shape[:2]
+                    self.last_capture = self.last_capture_attempt
+                    if health['rejected_frames']:
+                        getattr(self,'emit',lambda *args:None)('log',
+                            f"截图已恢复：跳过 {health['rejected_frames']} 帧纯色画面，连续两帧有效")
+                    return image
+            if stop.wait(min(.2, max(0, deadline-time.monotonic()))):
+                raise InterruptedError('截图等待已停止')
+        health['status'] = 'timed_out'
+        health['elapsed_seconds'] = round(time.monotonic()-started, 4)
+        raise RuntimeError('截图恢复超时：6 秒内未取得连续有效画面，停止而非继续点击')
+
+    def save_diagnostic(self, state, reason, config):
+        target = Path(super().save_diagnostic(state, reason, config))
+        report = json.loads(target.read_text(encoding='utf-8'))
+        report['capture_health'] = getattr(self, 'capture_health', None)
+        stamp = getattr(self, 'last_capture_attempt', None)
+        report['screenshot_age_seconds'] = None if stamp is None else round(time.monotonic()-stamp, 4)
+        previous = getattr(self, '_previous_recognition', None)
+        if previous:
+            from PIL import Image
+            previous_path = target.with_name(target.stem + '-previous.png')
+            Image.fromarray(self._previous_image[:, :, :3][:, :, ::-1]).save(previous_path)
+            report['previous_frame_recognition'] = {
+                'note': '上一个有识别记录的截图；不是本次截图的匹配结果',
+                'capture_age_seconds': round(time.monotonic() - self._previous_capture, 4),
+                'screenshot': previous_path.name,
+                'recognition': previous,
+            }
+        temporary = target.with_suffix('.tmp')
+        temporary.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+        temporary.replace(target)
+        return str(target)

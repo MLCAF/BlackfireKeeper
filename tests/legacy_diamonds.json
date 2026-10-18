@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "profile": {"id":"diamonds","display_name":"钻石入口（待人工领取）","kind":"one_shot"},
+  "initial_state":"ReturnHome","max_minutes":3,"max_rounds":0,"poll_seconds":0.5,
+  "watchdog":{"warn_seconds":20,"stop_seconds":60,"repeat_warning_seconds":20},
+  "states": {
+    "ReturnHome":{"timeout_seconds":60,"rules":[
+      {"name":"已到主界面","template":"主界面锚点.png","threshold":0.94,"min_contrast_ratio":0.65,"action":"none","next":"OpenDiamond","confirm_frames":2},
+      {"name":"从传送门返回主界面","template":"传送门.png","threshold":0.95,"min_contrast_ratio":0.65,"action":"click","next":"OpenDiamond","verify_change":true,"success_match":{"template":"主界面锚点.png","threshold":0.94},"retry_max_clicks":2,"retry_center_clicks":1,"retry_radius":0,"confirm_frames":2}
+    ]},
+    "OpenDiamond":{"timeout_seconds":60,"rules":[
+      {"name":"点击钻石入口并交接人工","template":"钻石.png","threshold":0.95,"min_contrast_ratio":0.65,"requires_match":{"template":"主界面锚点.png","threshold":0.94},"action":"click","verify_change":false,"event":"manual_handoff","confirm_frames":2}
+    ]}
+  }
+}

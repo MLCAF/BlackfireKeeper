@@ -1,0 +1,29 @@
+# Python and native runtime
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+build/
+dist/
+
+# Local game data, screenshots, diagnostics, cooldown records and investigation
+logs/
+evidence/
+backups/
+research/
+config/runtime/
+tests/fixtures/
+*.log
+*.dmp
+*.dump
+*.ct
+*.CT
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.idea/
+.vscode/
