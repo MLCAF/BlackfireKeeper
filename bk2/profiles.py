@@ -36,6 +36,8 @@ def build_dungeon_profile(base, task, tasks):
     add_defeat_recovery(profile)
     from .list_guard import add_list_guard
     add_list_guard(profile)
+    from .room_profile import add_room_evidence
+    add_room_evidence(profile)
     from .cooldowns import DUNGEON_IDS
     profile['expected_dungeon_id'] = DUNGEON_IDS[task['order']-1]
     profile['navigation_names'] = [t['entrance_template'] for t in tasks if t.get('entrance_template')]
