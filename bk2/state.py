@@ -2,6 +2,7 @@
 import time
 from .godot import GodotReader
 from .memory import MemoryReadError
+from .player_binding import check_stop, resolve_player_bindings
 
 ANCHORS = {'heroes', 'bag', 'dungeon_progress', 'level_battle'}
 
@@ -11,6 +12,8 @@ class StateReader:
         self.memory = memory
         self.godot = GodotReader(memory)
         self.head = None
+        self.binding = None
+        self.binding_diagnostics = {}
 
     def _sample(self, head):
         entries = self.godot.entries(head)
@@ -58,28 +61,46 @@ class StateReader:
         return result
 
     def bind(self, stop=None):
+        # A failed rebind must never leave the old head usable.
+        self.head = None
+        self.binding = None
+        self.binding_diagnostics = {'stage': 'discover'}
         valid = []
         for head in self.godot.discover_player_heads(stop):
+            check_stop(stop)
             try:
                 first = self._sample(head)
                 if first == self._sample(head):
                     valid.append(head)
             except MemoryReadError:
                 continue
-        if len(valid) != 1:
-            raise MemoryReadError(f'有效玩家字典候选数为 {len(valid)}，需要恰好 1 个；请进入已登录游戏后重连')
-        self.head = valid[0]
-        return self.snapshot()
+        self.binding_diagnostics['stage'] = 'ownership'
+        bindings = resolve_player_bindings(self.godot, valid, self.binding_diagnostics, stop)
+        if len(bindings) != 1:
+            raise MemoryReadError(f'结构候选 {len(valid)} 个，已核验 PlayerData 归属 {len(bindings)} 个；'
+                                  '需要唯一归属，未选择任意候选；请在已登录界面重连并保留诊断')
+        self.binding = bindings[0]
+        self.head = self.binding.head
+        try:
+            check_stop(stop)
+            result = self.snapshot()
+            self.binding_diagnostics['stage'] = 'bound'
+            return result
+        except Exception:
+            self.head = self.binding = None
+            raise
 
     def snapshot(self):
-        if not self.head:
+        if not self.head or not self.binding:
             raise MemoryReadError('尚未绑定玩家字典')
         for _ in range(3):
             try:
+                self.binding.validate(self.godot)
                 first = self._sample(self.head)
                 if first == self._sample(self.head):
+                    self.binding.validate(self.godot)
                     return {'status': 'ok', 'source': 'process_memory',
-                            'binding': 'unique_structurally_valid_candidate',
+                            'binding': 'verified_playerdata_script_member',
                             'pid': self.memory.pid, 'process_creation': self.memory.creation,
                             'captured_monotonic': time.monotonic(), 'data': first}
             except MemoryReadError:

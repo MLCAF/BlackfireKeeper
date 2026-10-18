@@ -107,12 +107,14 @@ class Session:
         self.thread.start()
 
     def _observe(self):
+        reader = None
         try:
             self.publish('log', '核验游戏版本，定位玩家字典；首次连接通常需要十几秒。')
             verify_build()
             with ProcessReader(find_game_pid(), EXE) as memory:
                 reader = StateReader(memory)
                 current = reader.bind(self.stop_event)
+                self.diagnostic_context['player_binding'] = dict(reader.binding_diagnostics)
                 previous_data = None
                 while not self.stop_event.is_set():
                     self.snapshot = current
@@ -136,6 +138,8 @@ class Session:
                             raise
                         current = self.rebind_after_disconnect(reader)
         except Exception as exc:
+            if reader is not None:
+                self.diagnostic_context['player_binding'] = dict(reader.binding_diagnostics)
             self.error = str(exc)
             self.snapshot = {'status': 'unknown', 'error': self.error}
             self.publish('memory_error', self.error)

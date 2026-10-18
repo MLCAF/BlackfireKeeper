@@ -1,5 +1,6 @@
 import struct
 import unittest
+from unittest.mock import Mock, patch
 from bk2.godot import GodotReader
 from bk2.memory import MemoryReadError
 from bk2.state import ProgressLedger, StateReader, require_fresh
@@ -117,11 +118,12 @@ class InterlockTests(unittest.TestCase):
         class Fake:
             def discover_player_heads(self,stop): return [1,2]
         reader.godot=Fake(); reader._sample=lambda head: {'valid':True}
-        with self.assertRaises(MemoryReadError): reader.bind()
+        with patch('bk2.state.resolve_player_bindings', return_value=[Mock(), Mock()]):
+            with self.assertRaises(MemoryReadError): reader.bind()
         self.assertIsNone(reader.head)
 
     def test_torn_snapshots_fail_closed(self):
-        reader=StateReader(None); reader.head=1
+        reader=StateReader(None); reader.head=1; reader.binding=Mock()
         values=iter(range(6)); reader._sample=lambda head: next(values)
         with self.assertRaises(MemoryReadError): reader.snapshot()
 
