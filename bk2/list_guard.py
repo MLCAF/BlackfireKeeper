@@ -5,7 +5,7 @@ from vendor_core.list_cooldown import ListCooldownScanner as BaseScanner
 from vendor_core.list_cooldown import list_navigation_profile as base_navigation
 
 LIST_RULE = dict(name='无遮挡且已选中的地下城导航', template='地下城导航选中.png',
-                 roi=[400, 560, 350, 160], threshold=.97,
+                 roi=[400, 560, 350, 160], threshold=.95,
                  min_brightness_ratio=.85, min_contrast_ratio=.85)
 
 
