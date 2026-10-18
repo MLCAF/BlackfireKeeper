@@ -8,6 +8,8 @@ from vendor_core.runner import Runner
 RESTART_LIMIT = 3
 DEFEAT = dict(template='战败标识核心.png', threshold=.95,
               min_contrast_ratio=.75, min_brightness_ratio=.75)
+ABANDON_PROMPT = dict(template='放弃冒险提示正文.png', threshold=.95,
+                      min_contrast_ratio=.85, min_brightness_ratio=.85)
 
 
 def add_defeat_recovery(profile):
@@ -34,6 +36,10 @@ def add_defeat_recovery(profile):
         for label, template in [('地下城列表', '地下城列表通用标识.png'),
                                 ('主界面', '主界面锚点.png')]
     ])
+    profile['states']['DefeatReturn']['rules'].append(dict(
+        common, name='确认放弃当前冒险', template='放弃冒险确认文字.png',
+        requires_match=copy.deepcopy(ABANDON_PROMPT),
+        defeat_action='confirm_abandon', next='DefeatReturn'))
     return profile
 
 
@@ -42,6 +48,7 @@ class BattleRunner(Runner):
         super().__init__(*args, **kwargs)
         self.battle_restarts = 0
         self.abandon_requested = False
+        self.abandon_confirmation_sent = False
         self.abandoned = False
 
     def run(self):
@@ -57,7 +64,10 @@ class BattleRunner(Runner):
     def ordered_rules(self):
         return [rule for rule in super().ordered_rules()
                 if (rule.get('defeat_action') != 'restart' or self.battle_restarts < RESTART_LIMIT)
-                and (rule.get('defeat_action') != 'abandon' or self.battle_restarts >= RESTART_LIMIT)]
+                and (rule.get('defeat_action') != 'abandon' or self.battle_restarts >= RESTART_LIMIT)
+                and (rule.get('defeat_action') != 'confirm_abandon'
+                     or (self.abandon_requested and self.battle_restarts == RESTART_LIMIT
+                         and not self.abandon_confirmation_sent))]
 
     def remember_click(self, rule):
         super().remember_click(rule)
@@ -70,7 +80,12 @@ class BattleRunner(Runner):
         elif action == 'abandon':
             self.abandon_requested = True
             self.record('battle_abandon', restarts=self.battle_restarts)
-            self.emit('log', '三次重新开始后仍失败：已点击放弃冒险，等待返回页面确认；不计通关')
+            self.emit('log', '三次重新开始后仍失败：已点击放弃冒险，等待专用确认弹窗或返回页面；不计通关')
+        elif action == 'confirm_abandon':
+            self.abandon_confirmation_sent = True
+            self.counters['abandon_confirm_requests'] = 1
+            self.record('battle_abandon_confirmation', restarts=self.battle_restarts)
+            self.emit('log', '已点击放弃冒险确认，等待返回副本列表或主界面；尚未计为退出成功')
 
     def click_with_change_confirmation(self, rule, match):
         action = rule.get('defeat_action')
@@ -84,9 +99,10 @@ class BattleRunner(Runner):
             return confirmed
         if self.dry_run:
             return False
-        if ((action == 'restart' and self.battle_restarts >= RESTART_LIMIT)
-                or (action == 'abandon' and self.battle_restarts < RESTART_LIMIT)
-                or self.abandon_requested):
+        if ((action == 'restart' and (self.battle_restarts >= RESTART_LIMIT or self.abandon_requested))
+                or (action == 'abandon' and (self.battle_restarts != RESTART_LIMIT or self.abandon_requested))
+                or (action == 'confirm_abandon' and (not self.abandon_requested
+                    or self.battle_restarts != RESTART_LIMIT or self.abandon_confirmation_sent))):
             raise RuntimeError('战败恢复次数或放弃状态不一致，停止重复输入')
         if self.pause_event.is_set():
             return False
@@ -102,6 +118,7 @@ class BattleRunner(Runner):
         self.stats.clicks += 1
         deadline = time.monotonic()+8
         absent_frames = 0
+        prompt_frames = 0
         # One click per defeat. A late animation never submits extra restarts.
         for _ in range(20):
             if self.stop_event.wait(.3):
@@ -119,6 +136,26 @@ class BattleRunner(Runner):
             self.emit('image', image)
             if self.interrupt_visible(image, rule):
                 raise RuntimeError('战败恢复后出现其他提示，未确认重试结果；停止并保存诊断')
+            if action == 'abandon':
+                prompt = self.backend.recognize(image, dict(
+                    ABANDON_PROMPT, name='放弃冒险 / 等待专用确认弹窗'), self.stop_event)
+                prompt_frames = prompt_frames+1 if prompt is not None else 0
+                if prompt_frames >= 2:
+                    self.record('abandon_prompt_seen', restarts=self.battle_restarts)
+                    return True  # Advance to confirmation, not successful exit.
+            if action == 'confirm_abandon':
+                # Only a recognized destination confirms this click. A vanished
+                # prompt, black frame or unrelated dialog is not an exit.
+                prompt = self.backend.recognize(image, dict(
+                    ABANDON_PROMPT, name='放弃冒险 / 确认后弹窗仍存在'), self.stop_event)
+                returned = prompt is None and any(self.backend.recognize(image, candidate, self.stop_event)
+                               for candidate in self.config['states']['DefeatReturn']['rules']
+                               if candidate.get('event') == 'task_complete')
+                absent_frames = absent_frames+1 if returned and not MaaBackend.is_nearly_uniform(image) else 0
+                if absent_frames >= 2:
+                    self.record('abandon_confirmation_returned', restarts=self.battle_restarts)
+                    return True
+                continue
             # Ignore contrast/brightness limits when checking disappearance:
             # a dimmed defeat screen behind a confirmation is still present.
             present = self.backend.recognize(image, dict(template=DEFEAT['template'],
@@ -128,4 +165,7 @@ class BattleRunner(Runner):
             if absent_frames >= 2:
                 self.record('defeat_screen_left', action=action, restarts=self.battle_restarts)
                 return True
-        raise RuntimeError(f'{rule["name"]}点击一次后，未连续两帧确认失败画面退出；停止并保存诊断，不重复点击')
+        expected = {'confirm_abandon': '返回副本列表或主界面',
+                    'abandon': '失败画面退出或放弃确认弹窗出现',
+                    'restart': '失败画面退出'}[action]
+        raise RuntimeError(f'{rule["name"]}点击一次后，未连续两帧确认{expected}；停止并保存诊断，不重复点击')
