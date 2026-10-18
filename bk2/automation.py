@@ -228,9 +228,14 @@ class Batch:
             completed_runs=self.scheduler.completed_runs if self.scheduler else 0))
         self.session.publish('log', f"体力 {before['count']}/{before['capacity']}，预计可领取 {before['claimable']}；开始面包工坊流程")
         config = build_food_profile()
+        claim = dict(before=before, response_timeout_seconds=config['states']['FoodAwaitReward']['timeout_seconds'],
+                     recovering=bool(recover_before))
+        self.session.diagnostic_context['food_claim'] = claim
         if recover_before:
             config['initial_state'] = 'FoodReward'
         runner = self.execute(config)
+        claim.update(counters=dict(runner.counters), ui_completed=runner.completed,
+                     after=summarize_food((self.session.snapshot or {}).get('data', {}).get('food_fields'), self.clock()))
         if self.stopped():
             raise InterruptedError('体力领取期间停止')
         if not runner.completed or (not recover_before and runner.counters.get('food_collections') != 1):
