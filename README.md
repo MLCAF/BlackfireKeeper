@@ -78,6 +78,8 @@ $env:BLACKFIRE_EXE = 'D:\Games\Blackfire Crusade\Blackfire Crusade.exe'
 
 已包含祭坛 Buff、钻石奖励确认与商店退出、短暂黑帧、战败重试和小字双排战利品“继续”等修复。相关逻辑在 `bk2/` 中，`vendor_core/` 是从 BKCrusade 移植的基础执行层。
 
+2026-10-18 补充修复六本选本超时：改用底部已选中的地下城导航校验列表，并统一列表 OCR 和返回确认。详见 [修复说明](docs/LIST_GUARD_FIX_20261018.md)。
+
 ## 检查与测试
 
 ```powershell

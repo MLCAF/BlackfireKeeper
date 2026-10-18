@@ -13,7 +13,7 @@ from vendor_core.config import validate, validate_dungeon_plan
 from vendor_core.runner import Runner
 from .battle import BattleRunner
 from vendor_core.diamonds import DiamondResult
-from vendor_core.list_cooldown import ListCooldownScanner, LIST_RULE, list_navigation_profile
+from .list_guard import ListCooldownScanner, LIST_RULE, list_navigation_profile
 from .cooldowns import summarize
 from .scheduler import MemoryScheduler, MemoryCooldown, DungeonAbandoned
 from .food import summarize as summarize_food

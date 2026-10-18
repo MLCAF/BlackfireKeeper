@@ -61,7 +61,7 @@ class DefeatBackend:
         template = rule['template']
         if page == 1 and template in (DEFEAT['template'],'战败重新开始文字.png','战败放弃冒险文字.png'):
             return Match((750 if template=='战败放弃冒险文字.png' else 565,580,80,24),1.)
-        if page == 3 and template == '地下城列表通用标识.png': return Match((140,435,245,120),1.)
+        if page == 3 and template == '地下城导航选中.png': return Match((535,590,108,122),1.)
         if page == 4 and rule.get('battle_victory'): return Match((600,450,150,40),1.)
         return None
     def click(self, match, offset, stop, pause):

@@ -34,4 +34,6 @@ def build_dungeon_profile(base, task, tasks):
     add_loot_recovery(profile)
     from .battle import add_defeat_recovery
     add_defeat_recovery(profile)
+    from .list_guard import add_list_guard
+    add_list_guard(profile)
     return profile
