@@ -83,6 +83,8 @@ class Session:
                     recent = list(self.recent_events)
                 context = dict(self.diagnostic_context)
                 if self.runner:
+                    guard = getattr(self.runner, 'action_guard', {})
+                    context['action_guard'] = dict(guard) if isinstance(guard, dict) else {}
                     context['runner'] = dict(state=self.runner.stats.state,
                         reason=self.runner.reason, history=list(self.runner.history),
                         counters=dict(self.runner.counters),

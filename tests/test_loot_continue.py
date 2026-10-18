@@ -112,7 +112,9 @@ class LootContinueTests(unittest.TestCase):
         self.assertEqual(len(backend.clicks),2)
         self.assertFalse(runner.completed)
         self.assertEqual(runner.counters.get('battles_completed',0),0)
-        self.assertIn('连续 2 次',runner.reason)
+        self.assertIn('已提交 2/2 次',runner.reason)
+        self.assertEqual(runner.action_guard['attempts'],2)
+        self.assertEqual(runner.action_guard['status'],'stopped')
         backend.save_diagnostic.assert_called_once()
 
     def test_original_variant_and_source_are_preserved_all_profiles_validate(self):

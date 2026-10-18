@@ -1,7 +1,7 @@
 """Bounded scene recovery, with fresh memory required before gameplay resumes."""
 import copy
 import time
-from vendor_core.runner import Runner
+from .action_guard import GuardedRunner as Runner
 from .cooldowns import DUNGEON_IDS
 from .list_guard import LIST_RULE
 

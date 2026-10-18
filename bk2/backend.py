@@ -80,6 +80,7 @@ class DiagnosticBackend(MaaBackend):
         target = Path(super().save_diagnostic(state, reason, config))
         report = json.loads(target.read_text(encoding='utf-8'))
         report['application'] = version_info()
+        report['action_guard'] = copy.deepcopy(getattr(self, 'action_guard_context', {}))
         report['capture_health'] = getattr(self, 'capture_health', None)
         stamp = getattr(self, 'last_capture_attempt', None)
         report['screenshot_age_seconds'] = None if stamp is None else round(time.monotonic()-stamp, 4)
