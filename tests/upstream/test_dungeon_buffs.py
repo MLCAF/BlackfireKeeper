@@ -23,6 +23,10 @@ class Value:
 class BuffTests(unittest.TestCase):
     def setUp(self):
         self.plan = json.loads((ROOT/'config/dungeon_plan.json').read_text(encoding='utf-8'))
+        # Test fixtures must not depend on the user's current rewards-only
+        # selection or Buff preferences. This changes only the in-memory copy.
+        for task in self.plan['tasks']:
+            task.update(enabled=task['order']<=6, buff='experience')
         self.base = json.loads((ROOT/'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8'))
 
     def test_legacy_defaults_unchanged(self):

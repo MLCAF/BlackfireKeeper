@@ -16,6 +16,8 @@ SINGLE_SUBMIT = {'去探险.png', '钻石免费按钮.png', '领取宝箱.png',
 # Do not infer a successor from arbitrary next-state buttons: they may also
 # exist behind a modal on the current page.
 DESTINATION_STATES = {'FoodDone'}
+STAIR_TEMPLATES = {'去下一层.png', '下一层阶梯核心.png'}
+LEAVE_PROMPTS = {'离开祝福弹窗.png', '不要剩余技能卡确定离开.png'}
 EVIDENCE_FIELDS = {'template', 'roi', 'threshold', 'min_contrast_ratio',
                    'min_brightness_ratio', 'requires_match'}
 
@@ -31,6 +33,12 @@ def guarded_profile(config):
             limit = 1 if single else min(2, int(rule.get('retry_max_clicks', 8)))
             rule.update(action_guard='single_submit' if single else 'navigation',
                         retry_max_clicks=limit, retry_center_clicks=1, retry_radius=0)
+            if rule['template'] in STAIR_TEMPLATES:
+                # These modals can be caused by the staircase click itself.
+                # Hand back to an existing local handler, not a global scan of
+                # every foreground action (which would consume the deadline).
+                rule['guard_handoffs'] = [candidate['name'] for candidate in state['rules']
+                    if candidate.get('foreground') and candidate['template'] in LEAVE_PROMPTS]
             # Reuse already-proven final-state evidence, never relax thresholds
             # or infer success from arbitrary changes/background scene pixels.
             if rule.get('success_match'):
@@ -52,6 +60,14 @@ class GuardedRunner(Runner):
         super().__init__(backend, guarded_profile(config), *args, **kwargs)
         self.action_guard = {}
         self._action_attempts = {}
+        self._foreground_handoffs = {}
+
+    def _resolve_foreground_handoffs(self, state, handler):
+        for key, pending in list(self._foreground_handoffs.items()):
+            if pending['state'] == state and pending['handler'] == handler:
+                self._action_attempts.pop(key, None)
+                self._foreground_handoffs.pop(key)
+                self.record('foreground_handoff_resolved', original_rule=pending['rule'], handler=handler)
 
     @staticmethod
     def _budget_key(state, rule):
@@ -67,6 +83,7 @@ class GuardedRunner(Runner):
             state, rule = self.pending_action
             self._action_attempts.pop(self._budget_key(state, rule), None)
             self._guard_status('confirmed', confirmation='delayed_successor', evidence_frames=2)
+            self._resolve_foreground_handoffs(state, rule['name'])
         return super().record(event, **details)
 
     def _guard_status(self, status, **fields):
@@ -82,6 +99,10 @@ class GuardedRunner(Runner):
         for key in ('requires_match', 'min_brightness_ratio', 'min_contrast_ratio'):
             presence.pop(key, None)  # A dimmed target is not a disappeared target.
         last, streak, source_frames = None, 0, 0
+        foreground_last, foreground_frames = None, 0
+        handoffs = [candidate for candidate in self.ordered_rules()
+                    if candidate['name'] in rule.get('guard_handoffs', [])
+                    and candidate.get('foreground') and candidate['name'] != rule['name']]
         for _ in range(math.ceil(seconds / self.POLL_SECONDS)):
             if self.stop_event.wait(self.POLL_SECONDS):
                 raise InterruptedError('点击确认期间停止')
@@ -102,7 +123,27 @@ class GuardedRunner(Runner):
             # check here so injected/offline backends cannot certify blackouts.
             if hasattr(image, 'shape') and MaaBackend.is_nearly_uniform(image):
                 last, streak, source_frames = None, 0, 0
+                foreground_last, foreground_frames = None, 0
                 continue
+            foreground, foreground_match = None, None
+            for candidate in handoffs:
+                foreground_match = self.backend.recognize(image, candidate, self.stop_event)
+                if foreground_match:
+                    foreground = candidate
+                    break
+            if foreground:
+                current = (foreground['name'], tuple(foreground_match.box))
+                stable = (foreground_last is not None and current[0] == foreground_last[0]
+                          and all(abs(a-b) <= 12 for a,b in zip(current[1],foreground_last[1])))
+                foreground_frames = foreground_frames+1 if stable else 1
+                foreground_last = current
+                last, streak, source_frames = None, 0, 0
+                if foreground_frames >= 2:
+                    self._guard_status('foreground_handoff', foreground_rule=foreground['name'],
+                                       foreground_template=foreground['template'], evidence_frames=2)
+                    return 'foreground_handoff', foreground
+                continue  # Never retry a background target behind a known modal.
+            foreground_last, foreground_frames = None, 0
             found, identity = None, None
             for index, candidate in enumerate(evidence):
                 found = self.backend.recognize(image, dict(candidate,
@@ -176,11 +217,17 @@ class GuardedRunner(Runner):
                     self._guard_status('awaiting_confirmation')
                     match = current
                 observe_first = False
-                status, _ = self._observe_action(rule, match, seconds)
+                status, foreground = self._observe_action(rule, match, seconds)
                 if status == 'confirmed':
                     self._action_attempts.pop(key, None)
+                    self._resolve_foreground_handoffs(self.stats.state, rule['name'])
                     self.emit('log',f'{rule["name"]}：连续两帧核验通过，已提交 {sent}/{limit} 次')
                     return True
+                if status == 'foreground_handoff':
+                    self._foreground_handoffs[key] = dict(state=self.stats.state,
+                        rule=rule['name'], handler=foreground['name'])
+                    self.emit('log',f'{rule["name"]}：已确认出现 {foreground["name"]}，交回原流程处理，不重复点击楼梯')
+                    return False
                 if status == 'interrupted':
                     self._guard_status('interrupted_budget_retained')
                     return False
