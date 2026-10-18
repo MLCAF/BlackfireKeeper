@@ -104,8 +104,10 @@ class Batch:
     def execute(self, config, dungeon=False):
         if self.stopped():
             raise InterruptedError('操作已停止')
-        self.backend = self.factory()
         self.session.diagnostic_context.update(config=config, dry_run=self.dry_run)
+        self.session.diagnostic_context.pop('runner', None)
+        self.backend = None
+        self.backend = self.factory()
         self.backend.required_completion = self.session.ledger.finished_transitions + 1 if dungeon else None
         runner_type = BattleRunner if dungeon else Runner
         runner = runner_type(self.backend, validate(config, ROOT / 'assets/image', True),
@@ -347,9 +349,8 @@ class Batch:
 
 def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_method='PostMessage', food_only=False, food_recovery=None, diamond_cleanup_only=False):
     from .backend import DiagnosticBackend
+    from .window_ready import connect_backend
     from vendor_core.windows import Windows
-    import ctypes
-    from ctypes import wintypes
     plan = load_plan() if plan is None else copy.deepcopy(plan)
     session.diagnostic_context = dict(plan=plan, capture=capture, input_method=input_method, dry_run=dry_run)
     validate_dungeon_plan(plan, ROOT / 'config/profiles', ROOT / 'assets/image', True)
@@ -357,17 +358,8 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
     session.wait_ready()
     boundary_ready(session)
     with input_lease():
-        wins = [w for w in Windows().list_game_windows() if w.pid == session.snapshot['pid']]
-        if len(wins) != 1:
-            raise RuntimeError('需要唯一可见游戏窗口；请在正常桌面启动 BK2')
+        pid = session.snapshot['pid']
         win = Windows()
-        if win.u.IsIconic(wins[0].hwnd):
-            win.u.ShowWindowAsync.argtypes = [wintypes.HWND, ctypes.c_int]
-            win.u.ShowWindowAsync(wins[0].hwnd, 9)
-            deadline = time.monotonic() + 3
-            while win.u.IsIconic(wins[0].hwnd) and time.monotonic() < deadline:
-                if session.operation_stop.wait(.05):
-                    raise InterruptedError('用户停止')
 
         class MemoryBackend(DiagnosticBackend):
             required_completion = None
@@ -397,7 +389,8 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
         threading.Thread(target=emergency, daemon=True).start()
         try:
             def factory():
-                backend = MemoryBackend(ROOT, wins[0], capture, input_method)
+                backend = connect_backend(session, win, pid,
+                    lambda window: MemoryBackend(ROOT, window, capture, input_method))
                 backend.emit = session.publish
                 return backend
             store = None if dry_run else ScheduleStore(ROOT / 'config/runtime/dungeon_schedule.json')
