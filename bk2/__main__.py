@@ -4,10 +4,13 @@ import time
 from pathlib import Path
 from .runtime import Session, ROOT
 from .automation import load_plan, run_plan
+from .version import DISPLAY_NAME, version_info
 
 
 def main():
-    parser = argparse.ArgumentParser(description='BK2 内存状态监视和地下城自动化')
+    parser = argparse.ArgumentParser(description=f'{DISPLAY_NAME} · 内存状态监视和地下城自动化')
+    parser.add_argument('--version', action='version', version=DISPLAY_NAME,
+                        help='显示程序版本并退出，不连接游戏')
     sub = parser.add_subparsers(dest='command')
     sub.add_parser('gui', help='打开监视和控制界面')
     observe = sub.add_parser('observe', help='只读内存，不点击')
@@ -29,7 +32,7 @@ def main():
         from vendor_core.config import load
         import maa, numpy, PIL
         plan = load_plan()
-        print(json.dumps({'build_sha256': verify_build(), 'templates': 'ok', 'dependencies': 'ok',
+        print(json.dumps({'application': version_info(), 'build_sha256': verify_build(), 'templates': 'ok', 'dependencies': 'ok',
                           'scheduler': plan['scheduler'], 'enabled_dungeons': sum(t['enabled'] for t in plan['tasks'])}))
         return
     def emit(kind, data):

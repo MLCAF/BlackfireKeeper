@@ -1,4 +1,6 @@
-# BlackfireKeeper
+# 黑火守望（BlackfireKeeper）
+
+首次公开测试版：**黑火守望 v0.1.0**。
 
 Blackfire Crusade 的 Windows 自动化助手，基于 BK2：用只读内存监视角色状态、地下城冷却与体力，用 MaaFramework 识别游戏界面并执行操作。
 
@@ -67,6 +69,15 @@ $env:BLACKFIRE_EXE = 'D:\Games\Blackfire Crusade\Blackfire Crusade.exe'
 更新代码后需要重启应用。保持游戏窗口可截图且尺寸稳定；不要让多个挂机同时控制同一游戏。领取任务只在当前挂机运行期间执行，关闭应用后不会继续。
 
 ## 版本与限制
+
+程序名称和版本统一定义在 [`bk2/version.py`](bk2/version.py)，UI 标题、界面顶部、命令行和两类错误诊断均读取这一处定义。诊断中的 `application.version` 是程序版本，`application.tag` 对应 Git 标签；原有顶层 `version` 仍表示报告格式版本。旧诊断保持原样，不追补版本。
+
+```powershell
+# 只显示程序版本，不连接游戏
+.\.venv\Scripts\python.exe -X utf8 -m bk2 --version
+```
+
+版本递增约定：`v0.1.1` 一类补丁号用于修复识别失败、卡住等问题；`v0.2.0` 一类次版本用于新增功能；核心功能和安装流程达到稳定发布标准后再使用 `v1.0.0`。每次发布更新版本定义，Git 标签与代码版本一致，已经发布的标签不覆盖。CI 会检查标签与代码是否一致。当前仍为公开测试版，版本号不代表全部游戏场景都已验证。
 
 当前内存布局仅核验过 SHA-256 为下列值的游戏 EXE：
 

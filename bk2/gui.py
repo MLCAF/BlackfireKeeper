@@ -5,6 +5,7 @@ import time
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from .runtime import Session
+from .version import DISPLAY_NAME
 from .automation import load_plan, save_plan, run_plan
 from vendor_core.unified import BUFF_OPTIONS
 from .food import summarize as summarize_food
@@ -13,7 +14,7 @@ from .food import summarize as summarize_food
 class App:
     def __init__(self, root):
         self.root = root
-        root.title('BK2 — 内存状态与地下城自动化')
+        root.title(f'{DISPLAY_NAME} · 地下城挂机控制台')
         root.geometry('1060x790')
         root.minsize(820, 650)
         self.events = queue.Queue()

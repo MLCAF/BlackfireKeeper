@@ -7,6 +7,7 @@ import sys
 import time
 import traceback
 from uuid import uuid4
+from .version import version_info
 
 
 def scrub(value):
@@ -26,7 +27,7 @@ def save_failure(root, run_id, stage, error, snapshot=None, context=None,
     root = Path(root)
     folder = root / 'logs/diagnostics' / (datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '-' + uuid4().hex[:6])
     folder.mkdir(parents=True)
-    report = dict(version=1, run_id=run_id, time=datetime.now().isoformat(),
+    report = dict(version=1, application=version_info(), run_id=run_id, time=datetime.now().isoformat(),
                   stage=stage, error=str(error), traceback=None,
                   last_valid_memory=snapshot, context=context or {}, recent_events=list(recent),
                   event_log=str(root/'logs'/f'{run_id}.jsonl'), screenshot=None,

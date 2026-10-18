@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 from vendor_core.unified import BUFF_OPTIONS
+from .version import DISPLAY_NAME
 
 BG = '#101722'
 PANEL = '#192331'
@@ -33,7 +34,7 @@ def card(parent, title):
 def build(app):
     root = app.root
     root.configure(bg=BG)
-    root.title('BK2 · 地下城挂机控制台')
+    root.title(f'{DISPLAY_NAME} · 地下城挂机控制台')
     root.geometry('1180x790')
     root.minsize(1080, 790)
     root.option_add('*Font', (FONT, 10))
@@ -72,7 +73,7 @@ def build(app):
     outer.pack(fill='both', expand=True)
     header = tk.Frame(outer, bg=BG); header.pack(fill='x')
     brand = tk.Frame(header, bg=BG); brand.pack(side='left')
-    text(brand, 'BK2  /  地下城控制台', size=23, bold=True).pack(anchor='w')
+    text(brand, DISPLAY_NAME, size=23, bold=True).pack(anchor='w')
     text(brand, '选择副本，查看冷却，让领取与冒险按顺序进行。', color=MUTED).pack(anchor='w', pady=(5, 0))
     app.connection_text = tk.StringVar(value='●  未连接游戏')
     app.connection_label = text(header, var=app.connection_text, color=MUTED)
