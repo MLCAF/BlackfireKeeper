@@ -26,9 +26,15 @@ def build_food_profile():
     collect['verify_change'] = False
     close = click('关闭面包工坊', evidence('体力工坊关闭.png',[850,130,170,150]),
                   'FoodDone', icon, title)
-    close['verify_change'] = False
-    for key in ('success_match','retry_center_clicks','retry_max_clicks','retry_radius'):
-        close.pop(key,None)
+    # Return may be either town or the dungeon list. Verify disappearance of
+    # the guarded close target here, then require positive destination evidence
+    # in FoodDone. A lost click must not advance into a passive waiting state.
+    close.pop('success_match')
+    close['retry_wait_seconds'] = 1.0
+    done = [dict(evidence('主界面锚点.png'),name='工坊关闭后确认主界面',
+                 action='none',event='task_complete',confirm_frames=2),
+            dict(icon,name='确认返回体力入口',action='none',
+                 event='task_complete',confirm_frames=2)]
     return dict(version=1, profile=dict(id='food',display_name='免费体力领取',kind='one_shot'),
                 initial_state='FoodEntry', max_minutes=3, max_rounds=0, poll_seconds=.3,
                 watchdog=dict(warn_seconds=20,stop_seconds=60,repeat_warning_seconds=20),
@@ -50,7 +56,7 @@ def build_food_profile():
                     'FoodReward':dict(timeout_seconds=30,rules=[
                         click('确认体力奖励',evidence('体力奖励确认.png',[450,440,500,110]),
                               'FoodClose',title,reward)]),
-                    'FoodClose':dict(timeout_seconds=30,rules=[close]),
-                    'FoodDone':dict(timeout_seconds=15,rules=[
-                        dict(evidence('主界面锚点.png'),name='工坊关闭后确认主界面',action='none',event='task_complete',confirm_frames=2),
-                        dict(icon,name='确认返回体力入口',action='none',event='task_complete',confirm_frames=2)])})
+                    # Also accept an already-closed panel after a delayed click
+                    # or a paused fresh-frame check; never click the old location.
+                    'FoodClose':dict(timeout_seconds=30,rules=[close]+done),
+                    'FoodDone':dict(timeout_seconds=15,rules=done)})
