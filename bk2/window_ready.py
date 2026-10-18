@@ -28,7 +28,14 @@ def prepare_window(session, windows, pid):
     def guard():
         if session.stop_event.is_set() or session.operation_stop.is_set():
             raise InterruptedError('窗口连接等待已停止')
-        require_fresh(session.snapshot, pid)
+        from .memory import MemoryReadError
+        try:
+            require_fresh(session.snapshot, pid)
+        except MemoryReadError:
+            # Window identity/geometry is still checked below. The backend
+            # restricts input to login recovery until memory becomes fresh.
+            if not time.monotonic() < getattr(session,'memory_recovery_until',0):
+                raise
 
     try:
         while time.monotonic() - started < WINDOW_TIMEOUT:

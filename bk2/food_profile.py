@@ -26,6 +26,9 @@ def build_food_profile():
     collect['verify_change'] = False
     close = click('关闭面包工坊', evidence('体力工坊关闭.png',[850,130,170,150]),
                   'FoodDone', icon, title)
+    close['verify_change'] = False
+    for key in ('success_match','retry_center_clicks','retry_max_clicks','retry_radius'):
+        close.pop(key,None)
     return dict(version=1, profile=dict(id='food',display_name='免费体力领取',kind='one_shot'),
                 initial_state='FoodEntry', max_minutes=3, max_rounds=0, poll_seconds=.3,
                 watchdog=dict(warn_seconds=20,stop_seconds=60,repeat_warning_seconds=20),
@@ -33,6 +36,10 @@ def build_food_profile():
                     'FoodEntry':dict(timeout_seconds=45,rules=[
                         dict(title,name='面包工坊已打开',action='none',next='FoodCollect',confirm_frames=2),
                         click('打开面包工坊',icon,'FoodCollect',title),
+                        click('主界面打开面包工坊',evidence('主城面包工坊.png'),
+                              'FoodCollect',title,evidence('主界面锚点.png')),
+                        click('主界面打开高亮面包工坊',evidence('主城面包工坊高亮.png'),
+                              'FoodCollect',title,evidence('主界面锚点.png')),
                         click('主界面经传送门到体力入口',evidence('传送门.png'),
                               'FoodEntry',icon,evidence('主界面锚点.png'))]),
                     'FoodCollect':dict(timeout_seconds=30,rules=[collect]),
@@ -45,4 +52,5 @@ def build_food_profile():
                               'FoodClose',title,reward)]),
                     'FoodClose':dict(timeout_seconds=30,rules=[close]),
                     'FoodDone':dict(timeout_seconds=15,rules=[
+                        dict(evidence('主界面锚点.png'),name='工坊关闭后确认主界面',action='none',event='task_complete',confirm_frames=2),
                         dict(icon,name='确认返回体力入口',action='none',event='task_complete',confirm_frames=2)])})

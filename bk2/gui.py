@@ -160,13 +160,15 @@ class App:
         self.status.set('正在连接并扫描内存…')
 
     def start_block_reason(self):
-        if not any(self.task_flags[t['id']].get() for t in self.plan['tasks'] if t.get('entrance_template')):
-            return '请先勾选至少一个地下城，再开始挂机或预览'
         snapshot = self.last_snapshot
         if not snapshot or not 0 <= time.monotonic()-snapshot['captured_monotonic'] <= 3:
             return '请先连接游戏并等待有效内存状态'
         if (snapshot['data'].get('dungeon_progress') or {}).get('result') == 'in progress':
-            return '当前副本尚未结束；请先完成并返回地下城列表，再开始挂机'
+            from .recovery import active_task
+            try:
+                active_task(snapshot['data'], self.plan['tasks'])
+            except ValueError as exc:
+                return str(exc)
         return None
 
     def start(self, dry_run):
@@ -204,7 +206,9 @@ class App:
                 self.report_error(exc)
         self.worker = threading.Thread(target=work, daemon=True)
         self.worker.start()
-        self.status.set('识别预览中，不点击' if dry_run else '刷本运行中，F8 停止')
+        selected = any(t['enabled'] for t in plan['tasks'])
+        self.status.set('识别预览中，不点击' if dry_run else
+                        ('挂机运行中，F8 停止' if selected else '仅领取模式运行中，F8 停止'))
 
     def stop_run(self):
         if self.session:
@@ -213,7 +217,7 @@ class App:
             self.emit('log', '当前没有正在运行的刷本任务')
 
     def collect_plan(self):
-        from vendor_core.config import validate_dungeon_plan
+        from .plan import validate_dungeon_plan
         from .runtime import ROOT
         plan = json.loads(json.dumps(self.plan))
         plan['max_total_runs'] = int(self.rounds.get())

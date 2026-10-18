@@ -9,8 +9,9 @@ from .runtime import ROOT
 from .state import require_fresh
 from vendor_core.unified import UnifiedScheduler, ScheduleStore
 from .profiles import build_dungeon_profile
-from vendor_core.config import validate, validate_dungeon_plan
-from vendor_core.runner import Runner
+from vendor_core.config import validate
+from .plan import validate_dungeon_plan
+from .recovery import RecoveryRunner as Runner
 from .battle import BattleRunner
 from vendor_core.diamonds import DiamondResult
 from .list_guard import ListCooldownScanner, LIST_RULE, list_navigation_profile
@@ -43,6 +44,10 @@ def validate_food_options(plan):
 def load_plan(path=None):
     path = Path(path) if path else ROOT / 'config/dungeon_plan.json'
     validate(build_diamond_profile(), ROOT / 'assets/image', True)
+    from .recovery import boundary_profile, recovery_rules
+    probe = boundary_profile()
+    probe['interrupts'] = recovery_rules()
+    validate(probe, ROOT / 'assets/image', True)
     plan = validate_food_options(validate_dungeon_plan(json.loads(path.read_text(encoding='utf-8-sig')),
                                  ROOT / 'config/profiles', ROOT / 'assets/image', True))
     base = json.loads((ROOT/'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8-sig'))
@@ -97,6 +102,18 @@ class Batch:
         self.await_changed_cooldown = {}
         self.food_store = food_store
         self.food_due = food_store.load(self.clock()) if food_store else 0
+        self.next_boundary_check = 0.
+
+    def service_boundary(self):
+        if self.stopped(): raise InterruptedError('操作已停止')
+        if self.clock() >= self.next_boundary_check or time.monotonic() < getattr(self.session,'memory_recovery_until',0):
+            from .recovery import boundary_profile
+            runner = self.execute(boundary_profile())
+            if not runner.completed:
+                raise RuntimeError('等待领取期间未确认主城/副本列表：'+runner.reason)
+            self.next_boundary_check = self.clock()+30
+        boundary_ready(self.session)
+        self.maybe_food()
 
     def stopped(self):
         return self.session.stop_event.is_set() or self.session.operation_stop.is_set()
@@ -131,12 +148,24 @@ class Batch:
         finally:
             self.session.runner = None
 
-    def dungeon(self, task):
-        boundary_ready(self.session)
-        self.maybe_food()
+    def dungeon(self, task, resume=False):
+        if time.monotonic() < getattr(self.session,'memory_recovery_until',0):
+            self.service_boundary()
+        if resume:
+            from .recovery import active_task
+            require_fresh(self.session.snapshot,self.session.snapshot['pid'])
+            current = active_task(self.session.snapshot['data'],self.plan['tasks'])
+            if current is None or current['id'] != task['id']:
+                raise RuntimeError('接续副本与当前内存状态不一致')
+        else:
+            boundary_ready(self.session)
+            self.maybe_food()
         before = self.memory_times()['dungeons'].get(task['id'], {}).get('deadline_unix')
         base = json.loads((ROOT / 'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8-sig'))
         config = build_dungeon_profile(base, task, self.plan['tasks'])
+        if resume:
+            from .recovery import add_resume_start
+            add_resume_start(config)
         baseline = self.session.ledger.finished_transitions
         runner = self.execute(config, dungeon=True)
         if getattr(runner, 'abandoned', False) and not self.stopped() and not self.dry_run:
@@ -168,6 +197,8 @@ class Batch:
         return ok, runner.reason
 
     def diamonds(self):
+        if time.monotonic() < getattr(self.session,'memory_recovery_until',0):
+            self.service_boundary()
         boundary_ready(self.session)
         config = build_diamond_profile()
         runner = self.execute(config)
@@ -327,12 +358,20 @@ class Batch:
             self.backend.cancel()
 
     def run(self):
-        boundary_ready(self.session)
+        from .recovery import active_task, add_resume_start
+        require_fresh(self.session.snapshot,self.session.snapshot['pid'])
+        unfinished = active_task(self.session.snapshot['data'],self.plan['tasks'])
         if self.dry_run:
             # Preview never constructs/persists cooldown state or enters manual handoff.
-            task = next(t for t in self.plan['tasks'] if t['enabled'])
+            task = unfinished or next((t for t in self.plan['tasks'] if t['enabled']),None)
+            if task is None:
+                config = build_food_profile() if self.plan.get('food',{}).get('enabled') else build_diamond_profile()
+                config['max_minutes'] = 1
+                runner = self.execute(config)
+                return {'succeeded':False,'preview':True,'completed_runs':0,'reason':runner.reason}
             base = json.loads((ROOT / 'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8-sig'))
             config = build_dungeon_profile(base, task, self.plan['tasks'])
+            if unfinished: add_resume_start(config)
             config['max_minutes'] = 1
             runner = self.execute(config, dungeon=True)
             return {'succeeded': False, 'preview': True, 'completed_runs': 0, 'reason': runner.reason}
@@ -341,7 +380,19 @@ class Batch:
             self.session.operation_stop, self.session.publish, self.store, self.clock,
             scan_cooldowns=self.scan_cooldowns)
         self.scheduler.read_stamina = self.stamina_count
-        self.scheduler.service_boundary = self.maybe_food
+        self.scheduler.service_boundary = self.service_boundary
+        if unfinished:
+            self.session.publish('log',f"先接续未完成的{unfinished['display_name']}；完成后再处理领取和已勾选副本")
+            ok, reason = self.dungeon(unfinished,resume=True)
+            if isinstance(ok,DungeonAbandoned):
+                self.scheduler.skipped_dungeons.add(unfinished['id'])
+            elif ok:
+                self.scheduler.completed_runs += 1
+                self.scheduler.ready_at[unfinished['id']] = self.clock()+unfinished['cooldown_seconds']
+            else:
+                raise RuntimeError('接续副本未确认结束：'+reason)
+            self.scheduler.in_flight = None
+            self.scheduler.checkpoint()
         self.sync_diamond_deadline()
         self.scheduler.run()
         if not self.scheduler.succeeded and not self.stopped():
@@ -361,7 +412,9 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
     validate_dungeon_plan(plan, ROOT / 'config/profiles', ROOT / 'assets/image', True)
     validate_food_options(plan)
     session.wait_ready()
-    boundary_ready(session)
+    require_fresh(session.snapshot,session.snapshot['pid'])
+    if food_only or diamond_cleanup_only:
+        boundary_ready(session)
     with input_lease():
         pid = session.snapshot['pid']
         win = Windows()
@@ -369,13 +422,45 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
         class MemoryBackend(DiagnosticBackend):
             required_completion = None
 
+            def recovery_data(self):
+                from .memory import MemoryReadError
+                try:
+                    require_fresh(session.snapshot,self.window.pid)
+                    return session.snapshot['data']
+                except MemoryReadError:
+                    if time.monotonic() < getattr(session,'memory_recovery_until',0):
+                        return None
+                    raise
+
+            def food_credit_verified(self):
+                data = self.recovery_data()
+                if data is None: return False
+                before = session.diagnostic_context.get('food_claim',{}).get('before',{})
+                after = summarize_food(data.get('food_fields'))
+                return (isinstance(before.get('count'),int) and after.get('count') is not None
+                        and after['count'] > before['count']
+                        and after.get('start_time',0) > before.get('start_time',0))
+
             def guard(self):
                 super().guard()
                 if session.stop_event.is_set() or session.operation_stop.is_set():
                     raise InterruptedError('操作已停止')
-                require_fresh(session.snapshot, self.window.pid)
+                self.recovery_data()
+
+            def click(self, *args, **kwargs):
+                if not getattr(self,'recovery_click_allowed',False):
+                    require_fresh(session.snapshot,self.window.pid)
+                return super().click(*args,**kwargs)
+
+            def swipe(self, *args, **kwargs):
+                require_fresh(session.snapshot,self.window.pid)
+                return super().swipe(*args,**kwargs)
 
             def recognize(self, frame, rule, stop):
+                if self.recovery_data() is None and rule.get('template') not in {
+                        '游戏timeout提示.png','提示确认文字.png','重连登录标识.png','重连开始冒险.png',
+                        '未完成地下城提示.png','未完成地下城好的.png'}:
+                    return None
                 if rule.get('food_collect'):
                     value = summarize_food(session.snapshot['data'].get('food_fields'))
                     if value['status'] != 'ready' or value['claimable'] <= 0:
@@ -386,6 +471,7 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
                 return super().recognize(frame, rule, stop)
 
         finished = threading.Event()
+        session.automation_active = not dry_run
         def emergency():
             while not finished.wait(.04):
                 if win.emergency_pressed():
@@ -419,6 +505,7 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
             session.publish('batch_result', result)
             return result
         finally:
+            session.automation_active = False
             finished.set()
             session.runner = None
             session.waiting_for_diamonds = False

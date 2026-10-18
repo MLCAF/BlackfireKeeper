@@ -1,5 +1,6 @@
 """Memory timestamp adapter over the migrated, boundary-only scheduler."""
 from dataclasses import dataclass
+import copy
 from vendor_core.unified import UnifiedScheduler
 from vendor_core.cooldown import DeferredCooldown
 from vendor_core.diamonds import DiamondResult
@@ -17,8 +18,31 @@ class DungeonAbandoned:
 
 class MemoryScheduler(UnifiedScheduler):
     def __init__(self, *args, **kwargs):
+        plan = args[0] if args else kwargs['plan']
+        rewards_only = not any(t['enabled'] for t in plan['tasks'])
+        if rewards_only:
+            probe = copy.deepcopy(plan)
+            probe['tasks'][0]['enabled'] = True
+            if args:
+                args = (probe, *args[1:])
+            else:
+                kwargs['plan'] = probe
         super().__init__(*args, **kwargs)
+        self.plan = plan
+        if rewards_only:
+            self.tasks = []
+            saved = self.store.load() if self.store else {}
+            self.ready_at = dict(saved.get('ready_at', {}))
+            self.in_flight = saved.get('in_flight')
         self.skipped_dungeons = set()
+
+    def checkpoint(self):
+        if self.store:
+            saved = self.store.load()
+            times = dict(saved.get('ready_at', {}))
+            times.update(self.ready_at)
+            self.store.save(dict(version=1, ready_at=times, diamond_due=self.diamond_due,
+                                 in_flight=self.in_flight))
 
     def available_tasks(self):
         return [t for t in self.tasks if t['id'] not in self.skipped_dungeons]
@@ -89,7 +113,7 @@ class MemoryScheduler(UnifiedScheduler):
             if ((self.pause_event is not None and self.pause_event.is_set())
                     or (self.plan['diamonds']['enabled'] and self.clock() >= self.diamond_due)):
                 continue
-            if not stamina_mode and self.completed_runs >= self.plan['max_total_runs']:
+            if self.tasks and not stamina_mode and self.completed_runs >= self.plan['max_total_runs']:
                 self.succeeded = True
                 self.reason = '地下城预定次数已完成'
                 break
@@ -97,7 +121,8 @@ class MemoryScheduler(UnifiedScheduler):
                 now = self.clock()
                 if last_wait_notice is None or now-last_wait_notice >= 30:
                     self.emit('schedule', dict(kind='dungeon', phase='rewards_only',
-                        task='已勾选副本均已跳过，继续钻石和体力领取',
+                        task=('未勾选副本，仅执行已启用的钻石和体力领取' if not self.tasks
+                              else '已勾选副本均已跳过，继续钻石和体力领取'),
                         skipped_dungeons=sorted(self.skipped_dungeons), completed_runs=self.completed_runs))
                     last_wait_notice = now
                 if self.wait(1.):

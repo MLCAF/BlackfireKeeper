@@ -133,6 +133,7 @@ class AbandonSchedulingTests(unittest.TestCase):
     def test_skip_lifetime_is_one_run_and_checkpoint_clears_inflight(self):
         s=self.make(); store=Mock(); saved={}
         store.save=lambda data:saved.update(copy.deepcopy(data))
+        store.load=lambda:copy.deepcopy(saved)
         s.store=store
         s.run_dungeon=lambda task:(DungeonAbandoned(),'abandoned')
         def boundary():

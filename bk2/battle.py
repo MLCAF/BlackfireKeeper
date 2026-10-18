@@ -3,7 +3,7 @@ import copy
 import time
 
 from vendor_core.backend import MaaBackend
-from vendor_core.runner import Runner
+from .recovery import RecoveryRunner as Runner
 
 RESTART_LIMIT = 3
 DEFEAT = dict(template='战败标识核心.png', threshold=.95,
@@ -135,7 +135,7 @@ class BattleRunner(Runner):
             image = self.backend.capture(self.stop_event)
             self.emit('image', image)
             if self.interrupt_visible(image, rule):
-                raise RuntimeError('战败恢复后出现其他提示，未确认重试结果；停止并保存诊断')
+                return False  # Preserve retry/abandon budget; let the guarded recovery interrupt run.
             if action == 'abandon':
                 prompt = self.backend.recognize(image, dict(
                     ABANDON_PROMPT, name='放弃冒险 / 等待专用确认弹窗'), self.stop_event)

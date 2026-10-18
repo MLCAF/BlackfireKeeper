@@ -35,6 +35,8 @@ class Session:
         self.waiting_for_diamonds = False
         self.ledger = ProgressLedger()
         self.error = None
+        self.memory_recovery_until = 0.
+        self.automation_active = False
         self.last_valid_snapshot = None
         self.last_image = None
         self.last_image_at = None
@@ -127,7 +129,12 @@ class Session:
                     self.ready.set()
                     if self.stop_event.wait(0.5):
                         break
-                    current = reader.snapshot()
+                    try:
+                        current = reader.snapshot()
+                    except MemoryReadError:
+                        if (self.runner is None and not self.automation_active) or self.operation_stop.is_set():
+                            raise
+                        current = self.rebind_after_disconnect(reader)
         except Exception as exc:
             self.error = str(exc)
             self.snapshot = {'status': 'unknown', 'error': self.error}
@@ -135,6 +142,35 @@ class Session:
             self.stop_automation('内存状态失效')
         finally:
             self.ready.set()
+
+    def rebind_after_disconnect(self, reader):
+        self.memory_recovery_until = time.monotonic()+60
+        self.snapshot = {'status':'unknown','error':'断线恢复中，暂停普通操作'}
+        self.publish('log','玩家字典暂时失效：60 秒内尝试重新绑定；仅允许已识别的登录恢复按钮')
+        session = self
+        class RecoveryStop:
+            def is_set(self):
+                return (session.stop_event.is_set() or session.operation_stop.is_set()
+                        or time.monotonic() >= session.memory_recovery_until)
+        try:
+            while time.monotonic() < self.memory_recovery_until:
+                if self.stop_event.is_set() or self.operation_stop.is_set():
+                    raise InterruptedError('内存重连已停止')
+                try:
+                    current = reader.bind(RecoveryStop())
+                    if time.monotonic() >= self.memory_recovery_until:
+                        raise MemoryReadError('内存重新绑定超时')
+                    require_fresh(current,current['pid'])
+                    if self.last_valid_snapshot and current['pid'] != self.last_valid_snapshot['pid']:
+                        raise MemoryReadError('重连进程身份不一致')
+                    self.snapshot = current
+                    self.publish('log','玩家字典已重新绑定，恢复普通状态核验')
+                    return current
+                except MemoryReadError:
+                    if self.operation_stop.wait(.5): raise InterruptedError('内存重连已停止')
+            raise MemoryReadError('60 秒内无法重新绑定唯一玩家字典')
+        finally:
+            self.memory_recovery_until = 0.
 
     def wait_ready(self, seconds=150):
         if not self.ready.wait(seconds):

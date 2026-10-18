@@ -144,7 +144,7 @@ def build(app):
         state_label.grid(row=index, column=2, sticky='w')
         text(grid, var=timer, size=12, bold=True).grid(row=index, column=3, sticky='w')
         app.task_rows[key] = (state, timer, state_label)
-    text(choices, '只刷勾选副本；全部冷却时等待。\n一本可取消，开局 Buff 按每个副本独立设置。',
+    text(choices, '不勾选副本：仅按下方开关领取钻石和体力。\n有未完成副本时先接续完成，再执行领取与轮换。',
          color=MUTED, size=9, justify='left').pack(anchor='w', pady=(8, 0))
 
     settings = tk.Frame(left, bg=PANEL, padx=16, pady=12)
