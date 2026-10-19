@@ -4,7 +4,7 @@
 
 ## Python 依赖
 
-依赖由 `requirements.txt` 安装，仓库不分发 Python 环境或依赖 DLL。MaaFramework、MaaAgentBinary、NumPy、Pillow 和 StrEnum 的许可证随各自安装包提供。
+源码依赖由 `requirements.txt` 安装，Git 源码仓库不包含 Python 环境或依赖 DLL。v0.4.0 起的便携发布附件包含 Python、Tk、MaaFramework、NumPy、Pillow 等运行依赖，许可资料保存在包内 `third_party/bundled/`，对应项目源码和构建脚本保存在 `Source.zip`。PyInstaller 使用允许分发构建产物的 bootloader exception；相关许可资料随包保存。MaaFramework 原生依赖也保留安装包内的许可资料。游戏程序不随包分发。
 
 ## OCR 模型
 

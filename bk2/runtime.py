@@ -9,7 +9,9 @@ from datetime import datetime
 from .memory import ProcessReader, find_game_pid, MemoryReadError
 from .state import StateReader, ProgressLedger, require_fresh
 
-ROOT = Path(__file__).resolve().parents[1]
+from .paths import application_root
+
+ROOT = application_root()
 EXE = Path(os.environ.get('BLACKFIRE_EXE') or (ROOT.parent.parent / 'Blackfire Crusade.exe')).expanduser().resolve()
 SUPPORTED_SHA256 = '06efee8f6cfb4953cc842404b2518b01b3536353c03115687475e0423ea7e7a9'
 
