@@ -1,8 +1,10 @@
 # 黑火守望（BlackfireKeeper）
 
-当前公开测试版：**黑火守望 v0.4.0**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v0.4.1**（首次公开测试版为 v0.1.0）。
 
-v0.4.0 新增 Windows x64 便携 EXE、首次选择游戏路径及离线自检。下载发布附件中的 `BlackfireKeeper-v0.4.0-windows-x64.zip`，完整解压后双击 `BlackfireKeeper.exe`，无需另装 Python。不要只复制 EXE；GitHub 自动生成的 Source code ZIP 仍是源码版，需要下方的 Python 安装步骤。
+v0.4.1 修复六本末层“完成冒险”传送门漏识别：增加局部传送门与文字双重校验，保持 0.95 阈值及原有返回页面确认。源码与便携版同步更新，详见 [修复说明](RELEASE_v0.4.1.md)。
+
+v0.4.0 起提供 Windows x64 便携 EXE、首次选择游戏路径及离线自检。当前下载发布附件中的 `BlackfireKeeper-v0.4.1-windows-x64.zip`，完整解压后双击 `BlackfireKeeper.exe`，无需另装 Python。不要只复制 EXE；GitHub 自动生成的 Source code ZIP 仍是源码版，需要下方的 Python 安装步骤。
 
 详细操作、只领取模式、体力阈值、诊断和保留设置的更新步骤见 [使用说明](使用说明.md)，也可下载后双击 [HTML 使用说明](使用说明.html)。构建及验证边界见 [便携版说明](docs/PORTABLE_VALIDATION.md)。
 

@@ -24,7 +24,7 @@ def run():
         def click(self, *args): raise AssertionError('Self-test cannot click')
 
     root = application_root()
-    load_plan()
+    plan = load_plan()
     # Force ctypes to load both framework and Windows toolkit dependencies.
     Library.framework()
     Library.toolkit()
@@ -40,6 +40,21 @@ def run():
             template='一本名称.png', roi=[0, 0, 600, 300], threshold=.95), threading.Event())
         if hit is None or hit.box[:2] != (100, 100):
             raise RuntimeError('Portable template matching failed')
+        # Exercise the patched finish rule from the frozen executable itself.
+        from .profiles import build_dungeon_profile
+        base = json.loads((root / 'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8-sig'))
+        profile = build_dungeon_profile(base, plan['tasks'][5], plan['tasks'])
+        finish = next(r for r in profile['states']['Progress']['rules']
+                      if r['template'] == '完成冒险传送门核心.png')
+        portal = Image.new('RGB', (1400, 800), (40, 40, 40))
+        with Image.open(root / 'assets/image/完成冒险传送门核心.png') as core:
+            portal.paste(core.convert('RGB'), (669, 610))
+        if recognizer.recognize(np.asarray(portal)[:, :, ::-1].copy(), finish, threading.Event()) is not None:
+            raise RuntimeError('Portable finish rule accepted a portal without completion text')
+        with Image.open(root / 'assets/image/完成冒险文字.png') as label:
+            portal.paste(label.convert('RGB'), (656, 684))
+        if recognizer.recognize(np.asarray(portal)[:, :, ::-1].copy(), finish, threading.Event()) is None:
+            raise RuntimeError('Portable completion portal matching failed')
         # An actual OCR job detects missing onnxruntime/DirectML/OpenCV dependencies.
         ocr_image = Image.new('RGB', (400, 100), 'white')
         ImageDraw.Draw(ocr_image).text((12, 12), '01:23:45', fill='black', font_size=42)
@@ -64,7 +79,7 @@ def run():
                 window.after_cancel(callback)
             window.destroy()
         report = dict(application=version_info(), result='passed',
-            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'ocr', 'tk_dashboard'],
+            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'ocr', 'tk_dashboard'],
             game_connected=False, game_input=False)
         (root / 'logs').mkdir(exist_ok=True)
         (root / 'logs/portable-self-test.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

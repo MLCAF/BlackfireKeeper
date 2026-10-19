@@ -25,4 +25,17 @@ def add_room_evidence(profile):
                                     threshold=.95,min_contrast_ratio=.85,min_brightness_ratio=.85),
                 offset=[0,64],retry_center_clicks=1,retry_max_clicks=2,retry_radius=0)
     rules.insert(rules.index(old)+1, card)
+    # The full completion portal includes cave scenery and scores below .95
+    # in the frozen cavern. Require both its interior and the completion text;
+    # a staircase or a town portal alone must never finish a dungeon.
+    old = next(r for r in rules if r['template'] == '完成地下城.png')
+    finish = copy.deepcopy(old)
+    finish.update(name='完成冒险（传送门与文字核验）', template='完成冒险传送门核心.png',
+                  roi=[620,570,160,145], threshold=.95,
+                  min_contrast_ratio=.85, min_brightness_ratio=.85,
+                  requires_match=dict(template='完成冒险文字.png',roi=[620,675,160,40],
+                                      threshold=.95,min_contrast_ratio=.85,min_brightness_ratio=.85),
+                  retry_center_clicks=1,retry_max_clicks=2,retry_radius=0)
+    # Keep the existing positive return-page confirmation and round accounting.
+    rules.insert(rules.index(old)+1, finish)
     return profile
