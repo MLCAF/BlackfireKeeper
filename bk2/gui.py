@@ -52,6 +52,8 @@ class App:
 
     def report_error(self, error, tb=None):
         if self.session:
+            if hasattr(error, 'window_geometry'):
+                self.session.diagnostic_context['window_geometry'] = error.window_geometry
             self.session.publish('error', str(error))
         else:
             from .diagnostics import save_failure
@@ -59,6 +61,20 @@ class App:
             path = save_failure(ROOT, 'gui-startup', 'gui', error)
             self.emit('diagnostic_saved', str(path))
             self.emit('error', str(error))
+
+    def prepare_startup(self):
+        from .automation import input_lease, InputLeaseBusy
+        from .window_geometry import standardize_open_game
+        from .runtime import EXE
+        try:
+            with input_lease():
+                standardize_open_game(self.preparation_stop, self.emit, EXE)
+        except InputLeaseBusy:
+            self.emit('log', '其他 BK2 正在操作游戏，已跳过启动时的尺寸调整；停止原挂机后再开始本窗口的任务')
+        except InterruptedError:
+            pass
+        except Exception as exc:
+            self.report_error(exc)
 
     def open_diagnostics(self):
         import os
@@ -383,17 +399,6 @@ class App:
 def launch():
     root = tk.Tk()
     app = App(root)
-    def prepare():
-        try:
-            from .automation import input_lease
-            from .window_geometry import standardize_open_game
-            from .runtime import EXE
-            with input_lease():
-                standardize_open_game(app.preparation_stop, app.emit, EXE)
-        except InterruptedError:
-            pass
-        except Exception as exc:
-            app.report_error(exc)
-    app.preparation_thread = threading.Thread(target=prepare, daemon=True)
+    app.preparation_thread = threading.Thread(target=app.prepare_startup, daemon=True)
     app.preparation_thread.start()
     root.mainloop()

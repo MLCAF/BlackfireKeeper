@@ -20,6 +20,18 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
         self.window_geometry = standardize(Geometry(Windows()), window, preparation_stop or threading.Event())
         super().__init__(root, window, capture_method, input_method)
 
+    def guard(self):
+        from .window_geometry import Geometry
+        expected = tuple(self.window_geometry['actual_client_size'])
+        # Maa/native calls may use a different thread DPI context. Both sides
+        # of this comparison must be physical client pixels, as at startup.
+        with Geometry(self.win).pixels():
+            observed = self.win.size(self.window.hwnd)
+            self.window_geometry['runtime_check'] = dict(
+                expected_client_size=list(expected), actual_client_size=list(observed),
+                coordinate_space='physical_pixels')
+            self.win.check(self.window, expected)
+
     def capture(self, stop):
         # Upstream clears recognition_trace when capturing. The watchdog may save
         # immediately after that capture, before any rules have been evaluated.

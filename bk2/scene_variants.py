@@ -8,6 +8,8 @@ SCENE_VARIANTS = {
     '城镇.png': ('城镇兼容.png', [0, 560, 150, 160]),
     '主城面包工坊.png': ('主城面包工坊兼容.png', [100, 330, 250, 220]),
     '传送门.png': ('传送门兼容.png', [0, 560, 150, 160]),
+    '放弃冒险确认文字.png': ('放弃冒险确认文字兼容.png', [650, 390, 250, 80]),
+    '放弃冒险提示正文.png': ('放弃冒险提示正文兼容.png', [600, 290, 300, 100]),
 }
 
 
@@ -17,7 +19,16 @@ class SceneVariantMixin:
         variant = SCENE_VARIANTS.get(rule['template'])
         if hit is not None or variant is None or stop.is_set():
             return hit
-        template, region = variant
+        variants = [variant]
+        if rule['template'] == '主界面锚点.png':
+            variants.append(('主界面高亮建筑核心.png', [250, 150, 300, 230]))
+        for template, region in variants:
+            hit = self._recognize_variant(image, rule, stop, template, region)
+            if hit is not None:
+                return hit
+        return None
+
+    def _recognize_variant(self, image, rule, stop, template, region):
         h, w = image.shape[:2]
         x, y, rw, rh = rule.get('roi', [0, 0, w, h])
         vx, vy, vw, vh = region

@@ -72,6 +72,10 @@ def boundary_ready(session):
         raise RuntimeError('内存显示副本仍在进行；请先完成当前副本再启动轮换，不会中途执行钻石任务')
 
 
+class InputLeaseBusy(RuntimeError):
+    """Another instance owns the input lease; never bypass or remove it."""
+
+
 @contextmanager
 def input_lease():
     import msvcrt
@@ -84,7 +88,7 @@ def input_lease():
         try:
             msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
         except OSError as exc:
-            raise RuntimeError('另一个 BK2 已在操作游戏') from exc
+            raise InputLeaseBusy('另一个 BK2 已在操作游戏') from exc
         try:
             yield
         finally:

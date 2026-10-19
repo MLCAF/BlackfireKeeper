@@ -78,6 +78,51 @@ def run():
             if recognizer.recognize(np.asarray(canvas)[:, :, ::-1].copy(),
                     dict(name='portable scene variant', template=original, threshold=.95), threading.Event()) is None:
                 raise RuntimeError(f'Portable scene variant failed: {variant}')
+        home = Image.new('RGB', (1400, 800), (40, 40, 40))
+        with Image.open(root/'assets/image/主界面高亮建筑核心.png') as core:
+            home.paste(core.convert('RGB'),(335,210))
+        from .recovery import HOME
+        if recognizer.recognize(np.asarray(home)[:,:,::-1].copy(),dict(HOME,name='highlight home'),threading.Event()) is None:
+            raise RuntimeError('Portable highlighted home matching failed')
+        nav=next(r for r in boundary_profile()['states']['Boundary']['rules'] if r['template']=='地下城入口主体.png')
+        page=Image.new('RGB',(1400,800),(40,40,40))
+        with Image.open(root/'assets/image/地下城入口主体.png') as target:
+            page.paste(target.convert('RGB'),(552,599))
+        if recognizer.recognize(np.asarray(page)[:,:,::-1].copy(),nav,threading.Event()) is not None:
+            raise RuntimeError('Portable wrong-tab navigation accepted without selected-levels context')
+        with Image.open(root/'assets/image/关卡导航选中.png') as target:
+            page.paste(target.convert('RGB'),(430,590))
+        if recognizer.recognize(np.asarray(page)[:,:,::-1].copy(),nav,threading.Event()) is None:
+            raise RuntimeError('Portable wrong-tab navigation matching failed')
+        # Pure policy probe inside the executable: no Win32 window operations.
+        from contextlib import nullcontext
+        from .window_geometry import standardize
+        class GeometryProbe:
+            hidden=True
+            requests=0
+            def pixels(self):return nullcontext()
+            def validate(self,window):pass
+            def minimized(self,window):return self.hidden
+            def restored(self,window):return False
+            def size(self,window):return STANDARD_CLIENT_SIZE
+            def restore(self,window):self.hidden=False;self.requests+=1
+        geometry=GeometryProbe()
+        restored=standardize(geometry,None,threading.Event())
+        if restored['status']!='restored_standard' or geometry.requests!=1:
+            raise RuntimeError('Portable minimized/maximized restore regression')
+        class EdgeProbe(GeometryProbe):
+            hidden=False
+            rectangle=None
+            def restored(self,window):return True
+            def size(self,window):return STANDARD_CLIENT_SIZE if self.rectangle else (822,1008)
+            def outer_and_work(self,window):return (100,0,938,1047),(0,0,1920,1040)
+            def client_origin(self,window):return (0,31) if self.rectangle else (108,31)
+            def resize(self,window,rectangle):self.rectangle=rectangle
+            def maximize(self,window):raise RuntimeError('Exact client placement must not maximize')
+        edge=EdgeProbe()
+        aligned=standardize(edge,None,threading.Event())
+        if edge.rectangle!=(-8,0,1936,1030) or aligned['actual_client_rect']!=[0,31,1920,1022]:
+            raise RuntimeError('Portable exact-client edge alignment regression')
         # An actual OCR job detects missing onnxruntime/DirectML/OpenCV dependencies.
         ocr_image = Image.new('RGB', (400, 100), 'white')
         ImageDraw.Draw(ocr_image).text((12, 12), '01:23:45', fill='black', font_size=42)
@@ -102,7 +147,7 @@ def run():
                 window.after_cancel(callback)
             window.destroy()
         report = dict(application=version_info(), result='passed',
-            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'boundary_detail', 'scene_variants', 'ocr', 'tk_dashboard'],
+            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'boundary_detail', 'scene_variants', 'highlight_home', 'levels_boundary', 'restore_policy', 'client_edge_alignment', 'ocr', 'tk_dashboard'],
             standard_client_size=list(STANDARD_CLIENT_SIZE), game_connected=False, game_input=False)
         (root / 'logs').mkdir(exist_ok=True)
         (root / 'logs/portable-self-test.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

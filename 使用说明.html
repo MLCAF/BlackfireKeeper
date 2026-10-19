@@ -6,9 +6,9 @@ h1{font-size:32px;color:#102638}h2{margin-top:40px;border-bottom:2px solid #cad8
 pre{padding:16px;background:#172332;color:#e8f3ff;overflow:auto;border-radius:8px;font:14px/1.6 Consolas,monospace}
 @media print{body{background:white;margin:0;max-width:none}h2,h3{break-after:avoid}pre{white-space:pre-wrap}}
 </style><body><h1>黑火守望使用说明</h1>
-<p>适用版本：v0.5.0 公开测试版。黑火守望（BlackfireKeeper，原 BK2）用于 Blackfire Crusade 的地下城挂机、免费体力和免费钻石领取。</p>
+<p>适用版本：v0.5.1 公开测试版。黑火守望（BlackfireKeeper，原 BK2）用于 Blackfire Crusade 的地下城挂机、免费体力和免费钻石领取。</p>
 <h2>1. 发给别人时应该发什么</h2>
-<p>推荐发送 `BlackfireKeeper-v0.5.0-windows-x64.zip`。对方完整解压后，双击 `BlackfireKeeper.exe`。便携包包含 Python、Tk 界面、MaaFramework、NumPy、Pillow、识别模板和 OCR 模型，不需要另装 Python 或执行 pip。</p>
+<p>推荐发送 `BlackfireKeeper-v0.5.1-windows-x64.zip`。对方完整解压后，双击 `BlackfireKeeper.exe`。便携包包含 Python、Tk 界面、MaaFramework、NumPy、Pillow、识别模板和 OCR 模型，不需要另装 Python 或执行 pip。</p>
 <p>不要只发送一个 EXE，不要只压缩本机源码目录，也不要复制本机 `.venv` 给别人。EXE 需要同目录的 `_internal`、`assets`、`config` 等文件。源码目录中的虚拟环境带有本机 Python 路径；你的工作目录还含个人设置、日志和冷却记录。</p>
 <p>便携包不含游戏。使用者需要自行安装游戏，并使用当前脚本支持的游戏版本。</p>
 <h2>2. 运行条件</h2>
@@ -122,4 +122,5 @@ $env:BLACKFIRE_EXE = &#x27;D:\Games\Blackfire Crusade\Blackfire Crusade.exe&#x27
 <p>具体通过项和限制见 `docs/PORTABLE_VALIDATION.md`。同机换目录验证能够发现路径依赖和漏打包，不能替代另一台干净 Windows 电脑的真实运行验证。此公开测试版不承诺所有分辨率、游戏更新或服务器异常均已覆盖。</p>
 <h2>游戏窗口标准尺寸</h2>
 <p>v0.5.0 起，启动挂机面板会尝试将游戏客户区统一到 **1920×991 物理像素**；尚未启动游戏时，之后开始识别前会自动处理。尺寸只包含游戏内容，不包含标题栏和边框，也不会更改 Windows 显示分辨率。</p>
-<p>请先停止其他挂机实例。若显示器工作区放不下标准窗口，程序会提示并停止连接；请换到空间足够的显示器或调整显示设置后重试。运行中手动改大小仍会触发原有停止保护，重新开始后再核验。自动调整不等于所有画面差异都已消除，识别失败仍需保留诊断以补充模板。</p></body></html>
+<p>请先停止其他挂机实例。若显示器工作区放不下标准窗口，程序会提示并停止连接；请换到空间足够的显示器或调整显示设置后重试。运行中手动改大小仍会触发原有停止保护，重新开始后再核验。自动调整不等于所有画面差异都已消除，识别失败仍需保留诊断以补充模板。</p>
+<p>v0.5.1 修正了最小化后恢复最大化的判断：恢复后连续确认标准客户区即可继续。其他实例正在挂机时，启动检查会提示跳过尺寸调整；开始挂机仍需先停止其他实例。窗口失败诊断会记录恢复次数和逐次状态。</p></body></html>

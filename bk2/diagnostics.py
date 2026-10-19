@@ -25,6 +25,9 @@ def scrub(value):
 def save_failure(root, run_id, stage, error, snapshot=None, context=None,
                  recent=(), image=None, image_at=None):
     root = Path(root)
+    context = dict(context or {})
+    if hasattr(error, 'window_geometry'):
+        context['window_geometry'] = error.window_geometry
     folder = root / 'logs/diagnostics' / (datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '-' + uuid4().hex[:6])
     folder.mkdir(parents=True)
     report = dict(version=1, application=version_info(), run_id=run_id, time=datetime.now().isoformat(),

@@ -109,6 +109,8 @@ def connect_backend(session, windows, pid, constructor):
             backend = constructor(window)
         except Exception as exc:
             report.update(status='connection_failed', error=str(exc))
+            if hasattr(exc, 'window_geometry'):
+                report['geometry'] = exc.window_geometry
             if type(exc) is not RuntimeError or str(exc) not in PRE_CONNECTION_ERRORS or attempt:
                 raise
             session.publish('log', '连接前窗口状态再次变化，重新核验一次；尚未发送游戏输入')
