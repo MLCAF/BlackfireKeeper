@@ -19,6 +19,8 @@ from tests.test_unified_replay import Offline
 ROOT=Path(__file__).resolve().parents[1]
 
 
+@unittest.skipUnless((ROOT/'tests/fixtures/loot_continue_20261018/reward.png').is_file(),
+                     'Private loot screenshots are not distributed; see tests/README.md')
 class LootContinueTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
