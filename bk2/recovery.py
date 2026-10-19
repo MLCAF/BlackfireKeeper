@@ -15,6 +15,7 @@ HOME = evidence('主界面锚点.png')
 LOGIN = evidence('重连登录标识.png')
 UNFINISHED = evidence('未完成地下城提示.png')
 TIMEOUT = dict(template='游戏timeout提示.png', threshold=.94, roi=[560,280,280,110])
+SESSION_EXPIRED = evidence('会话超时提示.png', roi=[510,235,380,150])
 
 
 def gameplay_states(config):
@@ -56,6 +57,10 @@ def recovery_rules():
              requires_match=copy.deepcopy(LOGIN), recovery_action='login'),
         dict(common, **evidence('未完成地下城好的.png'), name='重连：接续未完成地下城',
              requires_match=copy.deepcopy(UNFINISHED), recovery_action='unfinished'),
+        dict(common, name='重连：确认会话超时', template='提示确认文字.png',
+             roi=[620,365,160,90], threshold=.94, min_contrast_ratio=.85,
+             min_brightness_ratio=.85, requires_match=copy.deepcopy(SESSION_EXPIRED),
+             recovery_action='timeout'),
     ]
 
 
@@ -82,7 +87,10 @@ class RecoveryRunner(Runner):
         old = [r for r in config.get('interrupts',[]) if
                r.get('requires_match',{}).get('template') != TIMEOUT['template']]
         config['interrupts'] = recovery_rules()+old
-        super().__init__(backend, config, *args, **kwargs)
+        # Temporarily scope the v0.3.0 protocol to bakery tasks only. All other
+        # flows keep their original verifier, retries and foreground dispatch.
+        super().__init__(backend, config, *args,
+                         enable_guard=config.get('profile',{}).get('id') == 'food', **kwargs)
         self.round_armed = False
         self.list_resets = 0
         self.reconnects = 0

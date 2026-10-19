@@ -1,4 +1,4 @@
-"""Bounded action confirmation shared by dungeon, diamond and food runners.
+"""Bounded action confirmation, enabled only for food by production runners.
 
 Keep the frozen vendor runner intact. Custom battle/reconnection handlers and
 the food submit-once/wait states retain their own stronger domain protocols.
@@ -56,8 +56,9 @@ class GuardedRunner(Runner):
     NAVIGATION_WAIT_SECONDS = 3.
     SUBMISSION_WAIT_SECONDS = 15.
 
-    def __init__(self, backend, config, *args, **kwargs):
-        super().__init__(backend, guarded_profile(config), *args, **kwargs)
+    def __init__(self, backend, config, *args, enable_guard=True, **kwargs):
+        self.guard_enabled = enable_guard
+        super().__init__(backend, guarded_profile(config) if enable_guard else copy.deepcopy(config), *args, **kwargs)
         self.action_guard = {}
         self._action_attempts = {}
         self._foreground_handoffs = {}
@@ -78,7 +79,7 @@ class GuardedRunner(Runner):
     def record(self, event, **details):
         # The vendor's delayed-success path advances only after two frames.
         # Release that completed action's budget, not an interrupted request.
-        if (event == 'transition' and details.get('rule', '').endswith(' / 延迟完成确认')
+        if (self.guard_enabled and event == 'transition' and details.get('rule', '').endswith(' / 延迟完成确认')
                 and self.pending_action):
             state, rule = self.pending_action
             self._action_attempts.pop(self._budget_key(state, rule), None)
@@ -174,7 +175,7 @@ class GuardedRunner(Runner):
         return ('retryable' if source_frames >= 2 else 'unknown'), None
 
     def click_with_change_confirmation(self, rule, match):
-        if not rule.get('action_guard'):
+        if not self.guard_enabled or not rule.get('action_guard'):
             return super().click_with_change_confirmation(rule, match)
         if self.dry_run or self.pause_event.is_set():
             return False

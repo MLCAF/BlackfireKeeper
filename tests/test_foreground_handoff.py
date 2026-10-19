@@ -133,7 +133,7 @@ class ForegroundHandoffReplayTests(unittest.TestCase):
     def profile(self):
         return build_dungeon_profile(self.base,self.plan['tasks'][3],self.plan['tasks'])
 
-    def replay(self, name, legacy=False, resume=False, stuck=False):
+    def replay(self, name, legacy=False, resume=False, stuck=False, production=False):
         frame=self.frames[name]; reco=self.reco
         state='OpeningBuffLeaveConfirm' if name=='buff' else 'SkillCardLeaveConfirm'
         c=self.profile(); c.update(initial_state=state,max_minutes=0,poll_seconds=.001)
@@ -168,7 +168,9 @@ class ForegroundHandoffReplayTests(unittest.TestCase):
                     if not stuck: self.page='after'
             def save_diagnostic(self,*args):return 'offline.json'
         b=Backend([]); b.actions=[]
-        r=BattleRunner(b,c,Mock(),False,Clock())
+        # Keep historical guard regression coverage explicitly opt-in here;
+        # production no longer enables that protocol for dungeon profiles.
+        r=(BattleRunner if production else GuardedRunner)(b,c,Mock(),False,Clock())
         if legacy:
             for s in r.config['states'].values():
                 for rule in s['rules']:rule.pop('guard_handoffs',None)
@@ -192,6 +194,17 @@ class ForegroundHandoffReplayTests(unittest.TestCase):
                 self.assertEqual(r.stats.rounds,0)
                 self.assertFalse(r._foreground_handoffs)
                 self.assertTrue(any(e.get('status')=='foreground_handoff' for e in r.history))
+
+    def test_production_original_verifier_handles_both_prompts_without_generic_guard(self):
+        for name in self.frames:
+            for resume in (False,True):
+                with self.subTest(name=name,resume=resume):
+                    r,b=self.replay(name,resume=resume,production=True)
+                    self.assertTrue(r.completed,r.reason)
+                    self.assertEqual(b.actions,['popup'] if resume else ['stairs','popup'])
+                    self.assertFalse(r.guard_enabled)
+                    self.assertEqual(r.action_guard,{})
+                    self.assertEqual(r.stats.rounds,0)
 
     def test_resume_at_actual_prompt_only_clicks_confirmation(self):
         for name in self.frames:

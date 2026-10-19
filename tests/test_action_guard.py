@@ -172,7 +172,7 @@ class ActionGuardTests(unittest.TestCase):
         self.assertFalse(r._action_attempts)
         self.assertEqual(r.action_guard['confirmation'],'delayed_successor')
 
-    def test_guard_reaches_actual_recovery_and_battle_runners(self):
+    def test_non_food_recovery_and_battle_use_original_verifier(self):
         for runner_type in (RecoveryRunner,BattleRunner):
             with self.subTest(runner=runner_type.__name__):
                 b = FakeBackend(['button']*2+['destination']*3)
@@ -180,7 +180,9 @@ class ActionGuardTests(unittest.TestCase):
                 with patch.object(r.stop_event,'wait',return_value=False): r.run()
                 self.assertTrue(r.completed,r.reason)
                 self.assertEqual(b.clicks,1)
-                self.assertEqual(r.action_guard['status'],'confirmed')
+                self.assertFalse(r.guard_enabled)
+                self.assertEqual(r.action_guard,{})
+                self.assertNotIn('action_guard',r.config['states']['Action']['rules'][0])
 
     def test_all_dungeon_profiles_preserve_thresholds_and_offsets(self):
         from bk2.automation import load_plan

@@ -459,6 +459,7 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
             def recognize(self, frame, rule, stop):
                 if self.recovery_data() is None and rule.get('template') not in {
                         '游戏timeout提示.png','提示确认文字.png','重连登录标识.png','重连开始冒险.png',
+                        '会话超时提示.png',
                         '未完成地下城提示.png','未完成地下城好的.png'}:
                     return None
                 if rule.get('food_collect'):

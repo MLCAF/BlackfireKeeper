@@ -1,7 +1,7 @@
 """Single source of application identity for UI, CLI and diagnostics."""
 
 APP_NAME = '黑火守望'
-VERSION = '0.3.1'
+VERSION = '0.3.2'
 VERSION_TAG = f'v{VERSION}'
 DISPLAY_NAME = f'{APP_NAME} {VERSION_TAG}'
 RELEASE_CHANNEL = 'public-test'

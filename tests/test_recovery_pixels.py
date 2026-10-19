@@ -47,7 +47,7 @@ class RecoveryPixelTests(unittest.TestCase):
         self.assertEqual(runner.counters,{})
         self.assertEqual(runner.stats.rounds,0)
     def test_login_and_unfinished_require_specific_context_not_just_button(self):
-        for rule in recovery_rules()[1:]:
+        for rule in recovery_rules()[1:3]:
             frame=self.frame([(rule['template'],600,500),(rule['requires_match']['template'],450,260)])
             self.assertIsNotNone(self.reco.recognize(frame,rule,threading.Event()))
             self.assertIsNone(self.reco.recognize(self.frame([(rule['template'],600,500)]),rule,threading.Event()))

@@ -19,7 +19,6 @@ from tests.test_unified_replay import Offline
 ROOT=Path(__file__).resolve().parents[1]
 
 
-@unittest.skipUnless((ROOT/'tests/fixtures').is_dir(), 'Local replay screenshots are not distributed; see tests/README.md')
 class LootContinueTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -112,9 +111,9 @@ class LootContinueTests(unittest.TestCase):
         self.assertEqual(len(backend.clicks),2)
         self.assertFalse(runner.completed)
         self.assertEqual(runner.counters.get('battles_completed',0),0)
-        self.assertIn('已提交 2/2 次',runner.reason)
-        self.assertEqual(runner.action_guard['attempts'],2)
-        self.assertEqual(runner.action_guard['status'],'stopped')
+        self.assertIn('连续 2 次',runner.reason)
+        self.assertFalse(runner.guard_enabled)
+        self.assertEqual(runner.action_guard,{})
         backend.save_diagnostic.assert_called_once()
 
     def test_original_variant_and_source_are_preserved_all_profiles_validate(self):
