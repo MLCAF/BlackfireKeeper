@@ -2,6 +2,7 @@
 import json
 import threading
 from .paths import application_root
+from .window_geometry import STANDARD_CLIENT_SIZE
 
 
 def run():
@@ -12,6 +13,7 @@ def run():
     from maa.pipeline import JOCR, JRecognitionType
     from maa.library import Library
     from vendor_core.backend import MaaRecognizer
+    from .scene_variants import SceneVariantMixin, SCENE_VARIANTS
     from .automation import load_plan
     from .gui import App
     from .version import version_info
@@ -30,7 +32,9 @@ def run():
     Library.toolkit()
     controller = Offline()
     controller.post_connection().wait()
-    recognizer = MaaRecognizer(root / 'assets', controller)
+    class PortableRecognizer(SceneVariantMixin, MaaRecognizer):
+        pass
+    recognizer = PortableRecognizer(root / 'assets', controller)
     try:
         template = Image.open(root / 'assets/image/一本名称.png').convert('RGB')
         canvas = Image.new('RGB', (1400, 800), (40, 40, 40))
@@ -55,6 +59,25 @@ def run():
             portal.paste(label.convert('RGB'), (656, 684))
         if recognizer.recognize(np.asarray(portal)[:, :, ::-1].copy(), finish, threading.Event()) is None:
             raise RuntimeError('Portable completion portal matching failed')
+        from .recovery import boundary_profile
+        close = next(r for r in boundary_profile()['states']['Boundary']['rules']
+                     if r['template'] == '副本详情关闭.png')
+        detail = Image.new('RGB', (1400, 800), (40, 40, 40))
+        with Image.open(root / 'assets/image/副本详情关闭.png') as button:
+            detail.paste(button.convert('RGB'), (910, 130))
+        if recognizer.recognize(np.asarray(detail)[:, :, ::-1].copy(), close, threading.Event()) is not None:
+            raise RuntimeError('Portable detail close accepted without modal context')
+        with Image.open(root / 'assets/image/副本详情标识.png') as label:
+            detail.paste(label.convert('RGB'), (568, 359))
+        if recognizer.recognize(np.asarray(detail)[:, :, ::-1].copy(), close, threading.Event()) is None:
+            raise RuntimeError('Portable detail close matching failed')
+        for original, (variant, region) in SCENE_VARIANTS.items():
+            canvas = Image.new('RGB', (1400, 800), (40, 40, 40))
+            with Image.open(root / 'assets/image' / variant) as target:
+                canvas.paste(target.convert('RGB'), tuple(region[:2]))
+            if recognizer.recognize(np.asarray(canvas)[:, :, ::-1].copy(),
+                    dict(name='portable scene variant', template=original, threshold=.95), threading.Event()) is None:
+                raise RuntimeError(f'Portable scene variant failed: {variant}')
         # An actual OCR job detects missing onnxruntime/DirectML/OpenCV dependencies.
         ocr_image = Image.new('RGB', (400, 100), 'white')
         ImageDraw.Draw(ocr_image).text((12, 12), '01:23:45', fill='black', font_size=42)
@@ -79,8 +102,8 @@ def run():
                 window.after_cancel(callback)
             window.destroy()
         report = dict(application=version_info(), result='passed',
-            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'ocr', 'tk_dashboard'],
-            game_connected=False, game_input=False)
+            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'boundary_detail', 'scene_variants', 'ocr', 'tk_dashboard'],
+            standard_client_size=list(STANDARD_CLIENT_SIZE), game_connected=False, game_input=False)
         (root / 'logs').mkdir(exist_ok=True)
         (root / 'logs/portable-self-test.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
         print(json.dumps(report, ensure_ascii=False))

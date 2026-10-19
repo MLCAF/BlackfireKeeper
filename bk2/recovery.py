@@ -27,6 +27,16 @@ def boundary_profile():
     cleanup = entry_recovery_rules()
     for rule in cleanup:
         rule['next'] = 'Boundary'
+    # A stopped selection may leave details open before the next service wait.
+    # Close only this known modal; never press Explore or treat it as a run.
+    cleanup.append(dict(name='领取边界关闭遗留副本详情', template='副本详情关闭.png',
+        roi=[870,100,120,110], threshold=.96, min_contrast_ratio=.85,
+        min_brightness_ratio=.85,
+        requires_match=evidence('副本详情标识.png', roi=[450,320,500,100]),
+        foreground=True, action='click', next='Boundary', event='none',
+        verify_change=True, success_match={k:copy.deepcopy(v) for k,v in LIST_RULE.items() if k != 'name'},
+        retry_center_clicks=1, retry_max_clicks=2, retry_radius=0,
+        confirm_frames=2, cooldown_seconds=1))
     return dict(version=1,initial_state='Boundary',max_minutes=2,max_rounds=0,poll_seconds=.3,
         states={'Boundary':dict(timeout_seconds=30,rules=cleanup+[
             dict(rule,name='领取边界核验 / '+label,action='none',event='task_complete',confirm_frames=2)

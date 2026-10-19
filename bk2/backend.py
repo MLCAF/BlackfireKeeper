@@ -2,15 +2,23 @@
 import copy
 import json
 import time
+import threading
 from pathlib import Path
 
 from vendor_core.backend import MaaBackend
 from .version import version_info
+from .scene_variants import SceneVariantMixin
 
 
-class DiagnosticBackend(MaaBackend):
+class DiagnosticBackend(SceneVariantMixin, MaaBackend):
     CAPTURE_RECOVERY_SECONDS = 6.0
     CAPTURE_MAX_ATTEMPTS = 30
+
+    def __init__(self, root, window, capture_method='FramePool', input_method='Seize', preparation_stop=None):
+        from vendor_core.windows import Windows
+        from .window_geometry import Geometry, standardize
+        self.window_geometry = standardize(Geometry(Windows()), window, preparation_stop or threading.Event())
+        super().__init__(root, window, capture_method, input_method)
 
     def capture(self, stop):
         # Upstream clears recognition_trace when capturing. The watchdog may save
@@ -82,6 +90,7 @@ class DiagnosticBackend(MaaBackend):
         report['application'] = version_info()
         report['action_guard'] = copy.deepcopy(getattr(self, 'action_guard_context', {}))
         report['capture_health'] = getattr(self, 'capture_health', None)
+        report['window_geometry'] = getattr(self, 'window_geometry', None)
         stamp = getattr(self, 'last_capture_attempt', None)
         report['screenshot_age_seconds'] = None if stamp is None else round(time.monotonic()-stamp, 4)
         previous = getattr(self, '_previous_recognition', None)

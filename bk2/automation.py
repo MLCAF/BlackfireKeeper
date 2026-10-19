@@ -482,7 +482,9 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
         try:
             def factory():
                 backend = connect_backend(session, win, pid,
-                    lambda window: MemoryBackend(ROOT, window, capture, input_method))
+                    lambda window: MemoryBackend(ROOT, window, capture, input_method,
+                                                 preparation_stop=session.operation_stop))
+                session.diagnostic_context['window_geometry'] = getattr(backend, 'window_geometry', None)
                 backend.emit = session.publish
                 return backend
             store = None if dry_run else ScheduleStore(ROOT / 'config/runtime/dungeon_schedule.json')

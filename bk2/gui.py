@@ -20,6 +20,8 @@ class App:
         self.events = queue.Queue()
         self.session = None
         self.worker = None
+        self.preparation_thread = None
+        self.preparation_stop = threading.Event()
         self.last_snapshot = None
         self.closing = False
         self.preview_image = None
@@ -142,6 +144,9 @@ class App:
         return fresh
 
     def connect(self):
+        if self.preparation_thread and self.preparation_thread.is_alive():
+            self.emit('log', '正在核验游戏窗口尺寸，请稍候再连接')
+            return
         if self.worker and self.worker.is_alive():
             self.emit('error', '请先停止刷本，再重新连接')
             return
@@ -369,6 +374,7 @@ class App:
 
     def close(self):
         self.closing = True
+        self.preparation_stop.set()
         if self.session:
             self.session.stop()
         self.status.set('正在停止读取和操作…')
@@ -376,5 +382,18 @@ class App:
 
 def launch():
     root = tk.Tk()
-    App(root)
+    app = App(root)
+    def prepare():
+        try:
+            from .automation import input_lease
+            from .window_geometry import standardize_open_game
+            from .runtime import EXE
+            with input_lease():
+                standardize_open_game(app.preparation_stop, app.emit, EXE)
+        except InterruptedError:
+            pass
+        except Exception as exc:
+            app.report_error(exc)
+    app.preparation_thread = threading.Thread(target=prepare, daemon=True)
+    app.preparation_thread.start()
     root.mainloop()

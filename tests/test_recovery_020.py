@@ -216,10 +216,11 @@ class RewardsOnlyTests(unittest.TestCase):
         config=boundary_profile();validate(config,ROOT/'assets/image',True)
         rules=config['states']['Boundary']['rules']
         clicks=[r for r in rules if r['action']=='click']
-        self.assertEqual(len(clicks),3)
+        self.assertEqual(len(clicks),4)
         self.assertTrue(all(r['next']=='Boundary' for r in clicks))
         self.assertTrue(all(not r.get('increment_counter') for r in clicks))
-        self.assertTrue(all(r['template'] in ('钻石奖励确认核心.png','钻石奖励确认.png','钻石商店关闭核心.png') for r in clicks))
+        self.assertEqual({r['template'] for r in clicks},
+                         {'钻石奖励确认核心.png','钻石奖励确认.png','钻石商店关闭核心.png','副本详情关闭.png'})
 
     def test_zero_selection_preview_uses_service_profile_without_timer_writes(self):
         from tests.test_migration import session
