@@ -1,9 +1,7 @@
 """Keep recognition evidence across the watchdog's capture-before-match boundary."""
 import copy
-import json
 import time
 import threading
-from pathlib import Path
 
 from vendor_core.backend import MaaBackend
 from .version import version_info
@@ -97,8 +95,24 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
         raise RuntimeError('截图恢复超时：6 秒内未取得连续有效画面，停止而非继续点击')
 
     def save_diagnostic(self, state, reason, config):
-        target = Path(super().save_diagnostic(state, reason, config))
-        report = json.loads(target.read_text(encoding='utf-8'))
+        from PIL import Image
+        from .diagnostics import create_bundle, write_bundle_report
+        folder = create_bundle(self.diagnostic_root)
+        report = dict(version=1, stage='runner', state=state, reason=reason,
+            capture_method=getattr(self, 'capture_method', None),
+            input_method=getattr(self, 'input_method', None),
+            recognition=copy.deepcopy(getattr(self, 'recognition_trace', [])),
+            capture_age_seconds=round(time.monotonic()-self.last_capture, 4) if getattr(self, 'last_capture', None) else None,
+            execution=copy.deepcopy(getattr(self, 'diagnostic_context', {})), config=config,
+            screenshot=None)
+        if getattr(self, 'last_image', None) is not None:
+            try:
+                Image.fromarray(self.last_image[:, :, :3][:, :, ::-1]).save(folder/'screen.png')
+                report['screenshot'] = 'screen.png'
+            except Exception as exc:
+                report['screenshot_error'] = str(exc)
+        else:
+            report['screenshot_unavailable'] = '当前会话尚未收到截图；诊断不会额外点击或截图'
         report['application'] = version_info()
         report['action_guard'] = copy.deepcopy(getattr(self, 'action_guard_context', {}))
         report['capture_health'] = getattr(self, 'capture_health', None)
@@ -107,16 +121,15 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
         report['screenshot_age_seconds'] = None if stamp is None else round(time.monotonic()-stamp, 4)
         previous = getattr(self, '_previous_recognition', None)
         if previous:
-            from PIL import Image
-            previous_path = target.with_name(target.stem + '-previous.png')
-            Image.fromarray(self._previous_image[:, :, :3][:, :, ::-1]).save(previous_path)
             report['previous_frame_recognition'] = {
                 'note': '上一个有识别记录的截图；不是本次截图的匹配结果',
                 'capture_age_seconds': round(time.monotonic() - self._previous_capture, 4),
-                'screenshot': previous_path.name,
+                'screenshot': None,
                 'recognition': previous,
             }
-        temporary = target.with_suffix('.tmp')
-        temporary.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-        temporary.replace(target)
-        return str(target)
+            try:
+                Image.fromarray(self._previous_image[:, :, :3][:, :, ::-1]).save(folder/'previous.png')
+                report['previous_frame_recognition']['screenshot'] = 'previous.png'
+            except Exception as exc:
+                report['previous_frame_recognition']['screenshot_error'] = str(exc)
+        return str(write_bundle_report(folder, report))

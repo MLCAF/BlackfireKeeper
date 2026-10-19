@@ -55,14 +55,11 @@ class VersionIntegrationTests(unittest.TestCase):
 
     def test_backend_report_adds_identity_without_losing_evidence(self):
         from bk2.backend import DiagnosticBackend
-        from vendor_core.backend import MaaBackend
         backend = DiagnosticBackend.__new__(DiagnosticBackend)
         with tempfile.TemporaryDirectory() as folder:
-            target = Path(folder) / 'diagnostic.json'
-            target.write_text(json.dumps({'reason': 'timeout', 'recognition': [1]}),
-                              encoding='utf-8')
-            with patch.object(MaaBackend, 'save_diagnostic', return_value=str(target)):
-                result = backend.save_diagnostic('Entry', 'timeout', {})
+            backend.diagnostic_root = Path(folder)
+            backend.recognition_trace = [1]
+            result = backend.save_diagnostic('Entry', 'timeout', {})
             report = json.loads(Path(result).read_text(encoding='utf-8'))
         self.assertEqual(report['application'], version_info())
         self.assertEqual(report['recognition'], [1])

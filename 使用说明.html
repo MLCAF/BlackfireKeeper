@@ -6,9 +6,9 @@ h1{font-size:32px;color:#102638}h2{margin-top:40px;border-bottom:2px solid #cad8
 pre{padding:16px;background:#172332;color:#e8f3ff;overflow:auto;border-radius:8px;font:14px/1.6 Consolas,monospace}
 @media print{body{background:white;margin:0;max-width:none}h2,h3{break-after:avoid}pre{white-space:pre-wrap}}
 </style><body><h1>黑火守望使用说明</h1>
-<p>适用版本：v0.5.1 公开测试版。黑火守望（BlackfireKeeper，原 BK2）用于 Blackfire Crusade 的地下城挂机、免费体力和免费钻石领取。</p>
+<p>适用版本：v0.5.2 公开测试版。黑火守望（BlackfireKeeper，原 BK2）用于 Blackfire Crusade 的地下城挂机、免费体力和免费钻石领取。</p>
 <h2>1. 发给别人时应该发什么</h2>
-<p>推荐发送 `BlackfireKeeper-v0.5.1-windows-x64.zip`。对方完整解压后，双击 `BlackfireKeeper.exe`。便携包包含 Python、Tk 界面、MaaFramework、NumPy、Pillow、识别模板和 OCR 模型，不需要另装 Python 或执行 pip。</p>
+<p>推荐发送 `BlackfireKeeper-v0.5.2-windows-x64.zip`。对方完整解压后，双击 `BlackfireKeeper.exe`。便携包包含 Python、Tk 界面、MaaFramework、NumPy、Pillow、识别模板和 OCR 模型，不需要另装 Python 或执行 pip。</p>
 <p>不要只发送一个 EXE，不要只压缩本机源码目录，也不要复制本机 `.venv` 给别人。EXE 需要同目录的 `_internal`、`assets`、`config` 等文件。源码目录中的虚拟环境带有本机 Python 路径；你的工作目录还含个人设置、日志和冷却记录。</p>
 <p>便携包不含游戏。使用者需要自行安装游戏，并使用当前脚本支持的游戏版本。</p>
 <h2>2. 运行条件</h2>
@@ -67,7 +67,7 @@ pre{padding:16px;background:#172332;color:#e8f3ff;overflow:auto;border-radius:8p
 <h3>显示另一个 BK2 已在操作游戏</h3>
 <p>先停止并退出其他挂机窗口。不要删除正在使用的输入锁来强行抢占控制。复制多个目录也不等于可以让多个实例同时操作游戏。</p>
 <h3>卡在某个界面</h3>
-<p>按 F8 停止。记录时间、当前页面和预期动作，打开诊断目录，将对应 `report.json` 和截图提供给维护者。不要只提供最后一行“超时”。</p>
+<p>按 F8 停止。记录时间、当前页面和预期动作，打开诊断目录，将该次完整诊断文件夹提供给维护者。v0.5.2 起，每次诊断单独保存到 `logs/diagnostics/日期-时间-随机标识/`，其中有 `report.json`、可用时的 `screen.png` 及 `previous.png`；根目录的 `latest.txt` 指向最新报告。不要只提供最后一行“超时”。</p>
 <h3>体力没领取、钻石没领取</h3>
 <p>检查是否点了“开始挂机”、对应开关是否打开、是否仍在副本里，以及实际冷却和体力上限。关闭脚本、休眠或断电期间不会后台领取；下次运行根据实际状态重新判断。</p>
 <h2>7. 日志、设置与更新</h2>

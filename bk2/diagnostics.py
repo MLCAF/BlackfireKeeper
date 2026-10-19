@@ -22,14 +22,40 @@ def scrub(value):
     return str(value)
 
 
+def create_bundle(diagnostic_root):
+    root = Path(diagnostic_root)
+    root.mkdir(parents=True, exist_ok=True)
+    for _ in range(10):
+        folder = root / (datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '-' + uuid4().hex[:8])
+        try:
+            folder.mkdir()
+            return folder
+        except FileExistsError:
+            continue
+    raise FileExistsError('无法创建独立诊断目录')
+
+
+def write_bundle_report(folder, report):
+    folder = Path(folder)
+    target = folder/'report.json'
+    temporary = folder/'report.tmp'
+    temporary.write_text(json.dumps(scrub(report), ensure_ascii=False, indent=2), encoding='utf-8')
+    temporary.replace(target)
+    # Each writer owns its temporary pointer; concurrent diagnostics cannot
+    # truncate latest.txt or point at a report that is still being written.
+    pointer = folder/'latest.tmp'
+    pointer.write_text(str(target), encoding='utf-8')
+    pointer.replace(folder.parent/'latest.txt')
+    return target
+
+
 def save_failure(root, run_id, stage, error, snapshot=None, context=None,
                  recent=(), image=None, image_at=None):
     root = Path(root)
     context = dict(context or {})
     if hasattr(error, 'window_geometry'):
         context['window_geometry'] = error.window_geometry
-    folder = root / 'logs/diagnostics' / (datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '-' + uuid4().hex[:6])
-    folder.mkdir(parents=True)
+    folder = create_bundle(root/'logs/diagnostics')
     report = dict(version=1, application=version_info(), run_id=run_id, time=datetime.now().isoformat(),
                   stage=stage, error=str(error), traceback=None,
                   last_valid_memory=snapshot, context=context or {}, recent_events=list(recent),
@@ -53,10 +79,4 @@ def save_failure(root, run_id, stage, error, snapshot=None, context=None,
             report['screenshot_error'] = str(exc)
     else:
         report['screenshot_unavailable'] = '当前会话尚未收到截图；诊断不会额外点击或截图'
-    temp = folder/'report.tmp'
-    temp.write_text(json.dumps(scrub(report), ensure_ascii=False, indent=2), encoding='utf-8')
-    target = folder/'report.json'
-    temp.replace(target)
-    latest = root/'logs/diagnostics/latest.txt'
-    latest.write_text(str(target), encoding='utf-8')
-    return target
+    return write_bundle_report(folder, report)

@@ -123,6 +123,26 @@ def run():
         aligned=standardize(edge,None,threading.Event())
         if edge.rectangle!=(-8,0,1936,1030) or aligned['actual_client_rect']!=[0,31,1920,1022]:
             raise RuntimeError('Portable exact-client edge alignment regression')
+        # Exercise the frozen diagnostic writer without a game connection.
+        import tempfile
+        from pathlib import Path
+        from .backend import DiagnosticBackend
+        from .diagnostics import save_failure
+        with tempfile.TemporaryDirectory(prefix='BlackfireKeeper-diagnostic-') as temporary:
+            diagnostic_root=Path(temporary)/'logs/diagnostics'
+            writer=DiagnosticBackend.__new__(DiagnosticBackend)
+            writer.diagnostic_root=diagnostic_root
+            writer.last_image=np.zeros((8,9,3),dtype=np.uint8)
+            writer.last_capture=1
+            writer._previous_image=writer.last_image.copy()
+            writer._previous_recognition=[{'name':'portable probe'}]
+            writer._previous_capture=1
+            target=Path(writer.save_diagnostic('SelfTest','offline probe',{}))
+            if {p.name for p in target.parent.iterdir()}!={'report.json','screen.png','previous.png'}:
+                raise RuntimeError('Portable diagnostic bundle is incomplete')
+            second=save_failure(Path(temporary),'self-test','probe','offline probe')
+            if second.parent==target.parent or (diagnostic_root/'latest.txt').read_text(encoding='utf-8')!=str(second):
+                raise RuntimeError('Portable diagnostic bundle isolation failed')
         # An actual OCR job detects missing onnxruntime/DirectML/OpenCV dependencies.
         ocr_image = Image.new('RGB', (400, 100), 'white')
         ImageDraw.Draw(ocr_image).text((12, 12), '01:23:45', fill='black', font_size=42)
@@ -147,7 +167,7 @@ def run():
                 window.after_cancel(callback)
             window.destroy()
         report = dict(application=version_info(), result='passed',
-            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'boundary_detail', 'scene_variants', 'highlight_home', 'levels_boundary', 'restore_policy', 'client_edge_alignment', 'ocr', 'tk_dashboard'],
+            checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'boundary_detail', 'scene_variants', 'highlight_home', 'levels_boundary', 'restore_policy', 'client_edge_alignment', 'diagnostic_bundles', 'ocr', 'tk_dashboard'],
             standard_client_size=list(STANDARD_CLIENT_SIZE), game_connected=False, game_input=False)
         (root / 'logs').mkdir(exist_ok=True)
         (root / 'logs/portable-self-test.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

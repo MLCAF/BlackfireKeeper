@@ -247,14 +247,11 @@ class ActionGuardTests(unittest.TestCase):
 
     def test_backend_diagnostic_keeps_action_guard_evidence(self):
         from bk2.backend import DiagnosticBackend
-        from vendor_core.backend import MaaBackend
         backend = DiagnosticBackend.__new__(DiagnosticBackend)
         backend.action_guard_context = dict(status='stopped',attempts=1,max_attempts=1)
         with tempfile.TemporaryDirectory() as folder:
-            target = Path(folder)/'report.json'
-            target.write_text('{"reason":"example"}',encoding='utf-8')
-            with patch.object(MaaBackend,'save_diagnostic',return_value=str(target)):
-                backend.save_diagnostic('Action','example',{})
+            backend.diagnostic_root = Path(folder)
+            target = Path(backend.save_diagnostic('Action','example',{}))
             report = json.loads(target.read_text(encoding='utf-8'))
         self.assertEqual(report['action_guard'],backend.action_guard_context)
         self.assertEqual(report['reason'],'example')
