@@ -225,6 +225,24 @@ class Runner:
                 raise InterruptedError()
             after = self.backend.capture(self.stop_event)
             self.emit("image", after)
+            # Server-backed room changes can leave the old staircase visible
+            # during loading. Wait without another click, within a fixed bound.
+            transition_wait = rule.get("transition_wait_seconds", 0)
+            if transition_wait:
+                until = time.monotonic() + transition_wait
+                presence = dict(rule)
+                for key in ("min_brightness_ratio", "min_contrast_ratio", "requires_match"):
+                    presence.pop(key, None)
+                while time.monotonic() < until:
+                    if self.pause_event.is_set() or self.interrupt_visible(after, rule):
+                        return False
+                    if self.target_left_original_position(
+                            match, self.backend.recognize(after, presence, self.stop_event)):
+                        break
+                    if self.stop_event.wait(.25):
+                        raise InterruptedError()
+                    after = self.backend.capture(self.stop_event)
+                    self.emit("image", after)
             if self.interrupt_visible(after, rule):
                 return False
             success = rule.get("success_match")

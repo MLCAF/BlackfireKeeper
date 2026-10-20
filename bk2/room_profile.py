@@ -6,6 +6,8 @@ def add_room_evidence(profile):
     for state in ('Progress', 'OpeningBuffLeaveConfirm', 'SkillCardLeaveConfirm'):
         rules = profile['states'][state]['rules']
         old = next(r for r in rules if r['template'] == '去下一层.png')
+        old.update(transition_wait_seconds=8, retry_center_clicks=1,
+                   retry_max_clicks=2, retry_radius=0)
         core = copy.deepcopy(old)
         core.update(name=old['name']+'（阶梯与文字核验）', template='下一层阶梯核心.png',
                     roi=[620,570,160,145], threshold=.95,

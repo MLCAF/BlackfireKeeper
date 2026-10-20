@@ -4,6 +4,7 @@ import copy
 # Each fallback is confined to the relevant part of the normalized 720px frame.
 # These are captured UI variants, not a general relaxation of matching thresholds.
 SCENE_VARIANTS = {
+    '重连登录标识.png': ('重连登录标识兼容.png', [500, 200, 400, 180]),
     '主界面锚点.png': ('主界面锚点兼容.png', [200, 120, 350, 300]),
     '城镇.png': ('城镇兼容.png', [0, 560, 150, 160]),
     '主城面包工坊.png': ('主城面包工坊兼容.png', [100, 330, 250, 220]),

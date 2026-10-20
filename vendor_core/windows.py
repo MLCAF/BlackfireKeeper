@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import time
 from ctypes import wintypes as W
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,8 +98,13 @@ class Windows:
     def foreground(self, hwnd):
         if self.u.GetForegroundWindow() != hwnd:
             self.u.SetForegroundWindow(hwnd)
-        if self.u.GetForegroundWindow() != hwnd:
-            raise RuntimeError("无法激活游戏窗口，请手动点击游戏后重试")
+        # Windows may apply activation asynchronously. Never send input before
+        # the target really owns focus; do not force focus with simulated keys.
+        deadline = time.monotonic() + .3
+        while self.u.GetForegroundWindow() != hwnd:
+            if not self.u.IsWindow(hwnd) or time.monotonic() >= deadline:
+                raise RuntimeError("无法激活游戏窗口，请手动点击游戏后重试")
+            time.sleep(.02)
 
     def emergency_pressed(self):
         return bool(self.u.GetAsyncKeyState(0x77) & 0x8000)  # F8

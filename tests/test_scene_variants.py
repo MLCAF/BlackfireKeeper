@@ -59,6 +59,19 @@ class SceneVariantTests(unittest.TestCase):
             self.assertIsNotNone(self.hit(frame,name))
             self.assertEqual(self.reco.recognition_trace[-1]['template'],name)
 
+    def test_login_variant_requires_both_button_and_logo_and_rejects_mask(self):
+        from bk2.recovery import recovery_rules
+        rule = recovery_rules()[1]
+        frame = self.frame('重连登录标识兼容.png', 575, 226)
+        self.assertIsNone(self.reco.recognize(frame, rule, threading.Event()))
+        button = self.read(ROOT/'assets/image/重连开始冒险.png')
+        h, w = button.shape[:2]
+        frame[525:525+h, 632:632+w] = button
+        self.assertIsNotNone(self.reco.recognize(frame, rule, threading.Event()))
+        self.assertIsNone(self.reco.recognize((frame*.4).astype(np.uint8), rule, threading.Event()))
+        frame[226:350, 575:815] = 35
+        self.assertIsNone(self.reco.recognize(frame, rule, threading.Event()))
+
     def test_bakery_keeps_required_home_context(self):
         rule=next(r for r in build_food_profile()['states']['FoodEntry']['rules'] if r['template']=='主城面包工坊.png')
         frame=self.frame('主城面包工坊兼容.png',166,406)

@@ -6,8 +6,11 @@ from pathlib import Path
 import sys
 import time
 import traceback
+import threading
 from uuid import uuid4
 from .version import version_info
+
+_pointer_lock = threading.Lock()
 
 
 def scrub(value):
@@ -45,7 +48,19 @@ def write_bundle_report(folder, report):
     # truncate latest.txt or point at a report that is still being written.
     pointer = folder/'latest.tmp'
     pointer.write_text(str(target), encoding='utf-8')
-    pointer.replace(folder.parent/'latest.txt')
+    with _pointer_lock:
+        for attempt in range(5):
+            try:
+                pointer.replace(folder.parent/'latest.txt')
+                break
+            except PermissionError as exc:
+                if attempt < 4:
+                    time.sleep(.02)
+                else:
+                    # The completed report is durable even if an external
+                    # reader/antivirus temporarily locks the convenience index.
+                    print(f'诊断报告已保存：{target}；最新索引暂未更新：{exc}',
+                          file=sys.stderr)
     return target
 
 

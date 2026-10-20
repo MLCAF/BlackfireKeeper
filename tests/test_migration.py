@@ -42,6 +42,8 @@ class MigrationTests(unittest.TestCase):
     def test_source_files_match_migration_manifest(self):
         import hashlib
         manifest=json.loads((ROOT/'tests/migration_manifest.json').read_text(encoding='utf-8'))
+        patches = json.loads((ROOT/'tests/vendor_patches_20261020.json').read_text(encoding='utf-8'))
+        self.assertEqual(set(patches), {'vendor_core/config.py', 'vendor_core/runner.py', 'vendor_core/windows.py'})
         for entry in manifest:
             # Editable user plan is deliberately not frozen after migration.
             if entry['target']=='config/dungeon_plan.json': continue
@@ -49,7 +51,12 @@ class MigrationTests(unittest.TestCase):
             content = path.read_bytes()
             if path.suffix in ('.py', '.json', '.md', '.txt'):
                 content = content.replace(b'\r\n', b'\n')
-            self.assertEqual(hashlib.sha256(content).hexdigest(),entry['sha256'], entry['target'])
+            expected = entry['sha256']
+            if entry['target'] in patches:
+                change = patches[entry['target']]
+                self.assertEqual(change['base_sha256'], expected)
+                expected = change['patched_sha256']
+            self.assertEqual(hashlib.sha256(content).hexdigest(), expected, entry['target'])
 
     def test_all_six_profiles_validate_and_original_base_not_mutated(self):
         base=json.loads((ROOT/'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8'))

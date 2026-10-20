@@ -7,7 +7,7 @@ import time
 from collections import deque
 from datetime import datetime
 from .memory import ProcessReader, find_game_pid, MemoryReadError
-from .state import StateReader, ProgressLedger, require_fresh
+from .state import StateReader, ProgressLedger, require_fresh, bind_when_ready
 
 from .paths import application_root
 
@@ -117,7 +117,7 @@ class Session:
             verify_build()
             with ProcessReader(find_game_pid(), EXE) as memory:
                 reader = StateReader(memory)
-                current = reader.bind(self.stop_event)
+                current = bind_when_ready(reader, self.stop_event, self.publish)
                 self.diagnostic_context['player_binding'] = dict(reader.binding_diagnostics)
                 previous_data = None
                 while not self.stop_event.is_set():

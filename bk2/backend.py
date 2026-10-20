@@ -15,6 +15,7 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
     def __init__(self, root, window, capture_method='FramePool', input_method='Seize', preparation_stop=None):
         from vendor_core.windows import Windows
         from .window_geometry import Geometry, standardize
+        self.geometry_stop = preparation_stop or threading.Event()
         self.window_geometry = standardize(Geometry(Windows()), window, preparation_stop or threading.Event())
         super().__init__(root, window, capture_method, input_method)
 
@@ -24,11 +25,49 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
         # Maa/native calls may use a different thread DPI context. Both sides
         # of this comparison must be physical client pixels, as at startup.
         with Geometry(self.win).pixels():
-            observed = self.win.size(self.window.hwnd)
-            self.window_geometry['runtime_check'] = dict(
-                expected_client_size=list(expected), actual_client_size=list(observed),
-                coordinate_space='physical_pixels')
-            self.win.check(self.window, expected)
+            self._guard_physical(expected)
+
+    def _guard_physical(self, expected):
+        deadline = time.monotonic() + 3
+        stop = getattr(self, 'geometry_stop', threading.Event())
+        transient = ('游戏窗口客户区无效', '无法读取游戏客户区',
+                     '第一版禁止最小化运行，请恢复游戏窗口')
+        report = dict(expected_client_size=list(expected), actual_client_size=None,
+                      coordinate_space='physical_pixels', recovery_attempts=0)
+        self.window_geometry['runtime_check'] = report
+        recovering, stable = False, 0
+        while True:
+            if stop.is_set():
+                raise InterruptedError('窗口恢复等待已停止')
+            try:
+                observed = self.win.size(self.window.hwnd)
+                report['actual_client_size'] = list(observed)
+                self.win.check(self.window, expected)
+                stable += 1
+                if not recovering or stable >= 2:
+                    report['status'] = 'recovered' if recovering else 'valid'
+                    return
+            except RuntimeError as exc:
+                if str(exc) not in transient:
+                    raise
+                # An invalid client rect must not hide process exit/reuse.
+                pid, exe = self.win.identity(self.window.hwnd)
+                if pid != self.window.pid or exe.casefold() != self.window.executable.casefold():
+                    raise RuntimeError('目标窗口的进程身份发生变化') from exc
+                report.update(actual_client_size=None, error=str(exc), status='waiting')
+                stable = 0
+                if not recovering:
+                    getattr(self, 'emit', lambda *args: None)('log',
+                        '游戏窗口暂不可用，暂停操作最多 3 秒；恢复后重新截图')
+                recovering = True
+                # Even a successful recovery cannot authorize an old click.
+                self.last_shape = None
+                self.last_capture = 0
+            if time.monotonic() >= deadline:
+                report['status'] = 'timed_out'
+                raise RuntimeError('游戏窗口 3 秒内未恢复稳定；请恢复窗口后重新连接')
+            report['recovery_attempts'] += 1
+            stop.wait(.1)
 
     def capture(self, stop):
         # Upstream clears recognition_trace when capturing. The watchdog may save

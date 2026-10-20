@@ -66,14 +66,22 @@ class StateReader:
         self.binding = None
         self.binding_diagnostics = {'stage': 'discover'}
         valid = []
-        for head in self.godot.discover_player_heads(stop):
+        heads = self.godot.discover_player_heads(stop)
+        self.binding_diagnostics.update(discovered_heads=len(heads),
+                                        sample_failures=0, unstable_samples=0)
+        for head in heads:
             check_stop(stop)
-            try:
-                first = self._sample(head)
-                if first == self._sample(head):
-                    valid.append(head)
-            except MemoryReadError:
-                continue
+            for _ in range(3):
+                check_stop(stop)
+                try:
+                    first = self._sample(head)
+                    if first == self._sample(head):
+                        valid.append(head)
+                        break
+                    self.binding_diagnostics['unstable_samples'] += 1
+                except MemoryReadError:
+                    self.binding_diagnostics['sample_failures'] += 1
+                    # Do not put player values or raw dictionary contents in diagnostics.
         self.binding_diagnostics['stage'] = 'ownership'
         bindings = resolve_player_bindings(self.godot, valid, self.binding_diagnostics, stop)
         if len(bindings) != 1:
@@ -106,6 +114,40 @@ class StateReader:
             except MemoryReadError:
                 continue
         raise MemoryReadError('状态连续读取不一致或对象失效，请重新连接')
+
+
+def bind_when_ready(reader, stop, emit, seconds=30, clock=time.monotonic):
+    """Wait for login data, still requiring a unique verified PlayerData owner."""
+    deadline = clock() + seconds
+    attempts = 0
+    class BoundedStop:
+        def is_set(self):
+            return stop.is_set() or clock() >= deadline
+    last_error = '玩家数据尚未就绪'
+    while not stop.is_set() and clock() < deadline:
+        attempts += 1
+        try:
+            result = reader.bind(BoundedStop())
+            if BoundedStop().is_set():
+                break
+            reader.binding_diagnostics['startup_attempts'] = attempts
+            return result
+        except InterruptedError:
+            if stop.is_set():
+                raise
+            break
+        except MemoryReadError as exc:
+            last_error = str(exc)
+            # Ambiguity and malformed scans must not be hidden as login delay.
+            if reader.binding_diagnostics.get('structural_candidates') != 0:
+                raise
+            if attempts == 1:
+                emit('log', '玩家数据尚未就绪，最多等待 30 秒；请保持游戏已登录，不执行点击')
+            stop.wait(.5)
+    reader.binding_diagnostics['startup_attempts'] = attempts
+    if stop.is_set():
+        raise InterruptedError('玩家绑定已取消')
+    raise MemoryReadError('等待玩家数据超时：' + last_error)
 
 
 def require_fresh(snapshot, pid, now=None):

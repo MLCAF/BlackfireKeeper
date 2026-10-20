@@ -54,7 +54,7 @@ def main():
     for path in files:
         if path.parts[0] in {'assets', 'config', 'third_party', 'docs'} or path.name in {
                 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.md', 'requirements.txt',
-                '使用说明.html', '使用说明.md'}:
+                '使用说明.html', '使用说明.md'} or path.name.startswith('RELEASE_v'):
             target = output / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(source_bytes(path))

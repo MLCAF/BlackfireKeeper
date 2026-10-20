@@ -1,0 +1,17 @@
+{
+  "vendor_core/config.py": {
+    "base_sha256": "2c51ba515f11fcf7cf67bddba90475a9d6e4d4aa3961bddd4672c5c08828a8ae",
+    "patched_sha256": "9b5aed0cc2e3e3fcfa4e5f6780a8aec858590b28acff3707fd304b8415e62b97",
+    "reason": "Bound transition wait validation to 8 seconds"
+  },
+  "vendor_core/runner.py": {
+    "base_sha256": "3779ce7eab9d3db4bdeb868f0e6d8ec7e7bab72e61afb729c62085e6d121d249",
+    "patched_sha256": "a18263cb191d732e497c05890ff29d3ac5a1f69477f33292876a8df2d2e23164",
+    "reason": "Wait for room transitions before repeated input"
+  },
+  "vendor_core/windows.py": {
+    "base_sha256": "5ac16eeadbb5440579ebafa76693a5c9d9907b3143a9cc969740055bf10ffeeb",
+    "patched_sha256": "92f8d85940d1d1c29d58f0ff113c04a0dc64a070b6581264b866258b5035d4cb",
+    "reason": "Bounded foreground activation acknowledgement"
+  }
+}

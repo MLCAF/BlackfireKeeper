@@ -139,7 +139,7 @@ def validate(data: dict, image_root: Path, check_files=False) -> dict:
                 raise ValueError("verify_change 必须为布尔值")
             if "success_match" in rule and not verify_change:
                 raise ValueError("success_match 必须与 verify_change=true 一起使用")
-            retry_fields = {"retry_center_clicks", "retry_max_clicks", "retry_radius", "retry_wait_seconds"}
+            retry_fields = {"retry_center_clicks", "retry_max_clicks", "retry_radius", "retry_wait_seconds", "transition_wait_seconds"}
             if retry_fields & rule.keys() and not verify_change:
                 raise ValueError("点击重试参数必须与 verify_change=true 一起使用")
             if verify_change:
@@ -149,6 +149,7 @@ def validate(data: dict, image_root: Path, check_files=False) -> dict:
                 max_clicks = number(rule.get("retry_max_clicks", 8), "retry_max_clicks", 1, 12)
                 radius = number(rule.get("retry_radius", 18), "retry_radius", 0, 100)
                 number(rule.get("retry_wait_seconds", 0.6), "retry_wait_seconds", 0.1, 5)
+                number(rule.get("transition_wait_seconds", 0), "transition_wait_seconds", 0, 8)
                 if int(center_clicks) != center_clicks or int(max_clicks) != max_clicks or int(radius) != radius:
                     raise ValueError("点击重试次数和半径必须是整数")
                 if center_clicks > max_clicks:
