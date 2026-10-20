@@ -24,6 +24,34 @@ def template_path(root: Path, name: str) -> Path:
     return candidate
 
 
+def validate_condition(condition, condition_name, image_root, check_files, missing, depth=0):
+    # At most one nested context marker. Reject actions, cycles and arbitrary depth.
+    if depth > 1:
+        raise ValueError('画面附加校验最多两层')
+    allowed = {"template", "threshold", "roi", "min_brightness_ratio", "min_contrast_ratio", "requires_match"}
+    if not isinstance(condition, dict) or set(condition) - allowed:
+        raise ValueError(f"{condition_name} 只允许模板、阈值、ROI 和亮度/对比度保护")
+    condition_path = template_path(image_root, condition.get("template"))
+    if check_files and not condition_path.is_file():
+        missing.append(condition["template"])
+    number(condition.get("threshold", 0.9), "requires_match.threshold", 0.5, 1)
+    if "min_brightness_ratio" in condition:
+        number(condition["min_brightness_ratio"], "requires_match.min_brightness_ratio", 0.1, 1)
+    if "min_contrast_ratio" in condition:
+        number(condition["min_contrast_ratio"], f"{condition_name}.min_contrast_ratio", 0.1, 1)
+    if "roi" in condition:
+        roi = condition["roi"]
+        if not isinstance(roi, list) or len(roi) != 4:
+            raise ValueError("requires_match.roi 格式为 [x, y, width, height]")
+        for i, value in enumerate(roi):
+            number(value, "requires_match.roi", 0 if i < 2 else 1, 20000)
+            if int(value) != value:
+                raise ValueError("requires_match.roi 必须为整数")
+    if 'requires_match' in condition:
+        validate_condition(condition['requires_match'], 'requires_match', image_root,
+                           check_files, missing, depth+1)
+
+
 def validate(data: dict, image_root: Path, check_files=False) -> dict:
     if not isinstance(data, dict) or data.get("version") != 1:
         raise ValueError("配置 version 必须为 1")
@@ -84,26 +112,7 @@ def validate(data: dict, image_root: Path, check_files=False) -> dict:
             for condition_name in ("requires_match", "success_match"):
                 if condition_name not in rule:
                     continue
-                condition = rule[condition_name]
-                allowed = {"template", "threshold", "roi", "min_brightness_ratio", "min_contrast_ratio"}
-                if not isinstance(condition, dict) or set(condition) - allowed:
-                    raise ValueError(f"{condition_name} 只允许模板、阈值、ROI 和亮度/对比度保护")
-                condition_path = template_path(image_root, condition.get("template"))
-                if check_files and not condition_path.is_file():
-                    missing.append(condition["template"])
-                number(condition.get("threshold", 0.9), "requires_match.threshold", 0.5, 1)
-                if "min_brightness_ratio" in condition:
-                    number(condition["min_brightness_ratio"], "requires_match.min_brightness_ratio", 0.1, 1)
-                if "min_contrast_ratio" in condition:
-                    number(condition["min_contrast_ratio"], f"{condition_name}.min_contrast_ratio", 0.1, 1)
-                if "roi" in condition:
-                    roi = condition["roi"]
-                    if not isinstance(roi, list) or len(roi) != 4:
-                        raise ValueError("requires_match.roi 格式为 [x, y, width, height]")
-                    for i, value in enumerate(roi):
-                        number(value, "requires_match.roi", 0 if i < 2 else 1, 20000)
-                        if int(value) != value:
-                            raise ValueError("requires_match.roi 必须为整数")
+                validate_condition(rule[condition_name], condition_name, image_root, check_files, missing)
             if not isinstance(rule.get("foreground", False), bool):
                 raise ValueError("foreground 必须为布尔值")
             if not isinstance(rule.get('preserve_pending', False), bool):

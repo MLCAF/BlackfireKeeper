@@ -1,8 +1,8 @@
 {
   "vendor_core/config.py": {
     "base_sha256": "2c51ba515f11fcf7cf67bddba90475a9d6e4d4aa3961bddd4672c5c08828a8ae",
-    "patched_sha256": "9b5aed0cc2e3e3fcfa4e5f6780a8aec858590b28acff3707fd304b8415e62b97",
-    "reason": "Bound transition wait validation to 8 seconds"
+    "patched_sha256": "940c6453f08cdb742c16c8d272b5066d8e51a8578b27ba1f96d36ec5c04ca615",
+    "reason": "Bound transition wait to 8 seconds; validate at most two nested visual context markers without executable actions"
   },
   "vendor_core/runner.py": {
     "base_sha256": "3779ce7eab9d3db4bdeb868f0e6d8ec7e7bab72e61afb729c62085e6d121d249",

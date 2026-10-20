@@ -126,6 +126,22 @@ class RecoveryRunner(Runner):
         return super().record(event, **details)
 
     def pending_success(self, image):
+        # Some completed dungeons return to the world tab. Only a pending
+        # completion click from this armed round authorizes returning to the
+        # dungeon list; seeing a world page alone must never count a completion.
+        if (self.round_armed and self.stats.state == 'Progress' and self.pending_action
+                and self.pending_action[0] == 'Progress'
+                and self.pending_action[1].get('next') == 'ReturnEntry'):
+            rule = dict(name='完成冒险后从关卡切回地下城',
+                **evidence('地下城入口主体.png', roi=[520,560,160,160]),
+                requires_match=evidence('关卡导航选中.png', roi=[400,560,150,160]),
+                action='click', next='ReturnEntry', event='none', verify_change=True,
+                success_match={k:copy.deepcopy(v) for k,v in LIST_RULE.items() if k != 'name'},
+                retry_center_clicks=1, retry_max_clicks=2, retry_radius=0,
+                confirm_frames=2, cooldown_seconds=1)
+            match = self._hit(image, rule)
+            if match:
+                return rule, match
         if self.arm_after_recovery:
             if self.counters.get('reconnect_round_started'):
                 self.arm_after_recovery = False

@@ -14,6 +14,12 @@ def build_diamond_profile():
         if isinstance(value,dict):
             if value.get('template') in replacements:
                 value['template']=replacements[value['template']]
+            if value.get('template') == '钻石免费包标识.png':
+                # The wide title strip alone also matches a town roof. Require
+                # the shop's independent close control before entering/OCRing it.
+                value['roi'] = [210, 200, 340, 110]
+                value['requires_match'] = dict(template=CLOSE, roi=[1110,50,180,160],
+                    threshold=.96, min_contrast_ratio=.85, min_brightness_ratio=.85)
             for child in value.values():visit(child)
         elif isinstance(value,list):
             for child in value:visit(child)
