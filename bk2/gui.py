@@ -40,6 +40,8 @@ class App:
         self.last_memory_json = None
         from .dashboard import build
         build(self)
+        from .forbidden_panel import ForbiddenPanel
+        self.forbidden_panel = ForbiddenPanel(self)
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.report_callback_exception = lambda typ, value, tb: self.report_error(value, tb)
         root.after(100, self.drain)
@@ -193,6 +195,8 @@ class App:
         return None
 
     def start(self, dry_run):
+        if getattr(self, 'forbidden_panel', None) and self.forbidden_panel.selected():
+            return self.forbidden_panel.start(dry_run)
         if self.worker and self.worker.is_alive():
             return
         blocked = self.start_block_reason()
@@ -253,6 +257,8 @@ class App:
         return validate_dungeon_plan(plan, ROOT / 'config/profiles', ROOT / 'assets/image', True)
 
     def save_options(self):
+        if getattr(self, 'forbidden_panel', None) and self.forbidden_panel.selected():
+            return self.forbidden_panel.save()
         if self.worker and self.worker.is_alive():
             return
         try:
@@ -302,6 +308,8 @@ class App:
             if kind in ('memory', 'memory_change'):
                 self.show_memory(data)
             elif kind == 'stats':
+                if data.get('mode') == '禁域':
+                    self.forbidden_panel.progress.set(f"{data['state']} · 已完成 {data['rounds']} 次 · 点击 {data['clicks']} 次")
                 self.status.set(f"{data['mode']} · 流程 {data['state']} · 已确认 {data['rounds']} 轮 · 点击 {data['clicks']} 次")
             else:
                 text = data if isinstance(data, str) else json.dumps(data, ensure_ascii=False)
@@ -311,6 +319,8 @@ class App:
                     self.logs.delete('1.0', '301.0')
                 if kind in ('error', 'memory_error', 'finished'):
                     self.status.set(text)
+                    if kind in ('error', 'memory_error') and self.session and self.session.diagnostic_context.get('mode') == 'forbidden':
+                        self.forbidden_panel.progress.set('禁域已停止：' + text)
                     if kind == 'memory_error':
                         self.cooldown_status.set('冷却：内存读取失效，状态未知')
                         self.last_snapshot = None
@@ -333,6 +343,8 @@ class App:
                 elif kind == 'food_schedule':
                     self.food_next_check = data['next_check']
                 elif kind == 'batch_result':
+                    if self.session and self.session.diagnostic_context.get('mode') == 'forbidden':
+                        self.forbidden_panel.progress.set(f"{data['reason']} · 已完成 {data['completed_runs']} 次")
                     self.status.set(f"{data['reason'] or '已停止'} · 共完成 {data['completed_runs']} 次")
                     self.task_text.set('本次任务完成' if data['succeeded'] else '本次任务已停止')
                     self.completed_runs = data['completed_runs']
@@ -371,6 +383,7 @@ class App:
         else:
             self.manual_button.pack_forget()
         fresh = self.refresh_dashboard()
+        self.forbidden_panel.refresh(fresh, busy)
         blocked = self.start_block_reason()
         for button in (self.preview_button, self.run_button):
             button.configure(state='normal' if fresh and not busy and not blocked else 'disabled')

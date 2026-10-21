@@ -22,6 +22,12 @@ def main():
         p.add_argument('--capture', choices=['FramePool', 'ScreenDC'], default='FramePool')
         p.add_argument('--input', choices=['PostMessage', 'SendMessage', 'Seize'], default='PostMessage')
     sub.add_parser('check', help='检查版本、依赖及模板')
+    forbidden = sub.add_parser('forbidden', help='黄金古国禁域挂机，独立于地下城计划')
+    forbidden.add_argument('--rounds', type=int, default=10)
+    forbidden.add_argument('--minimum-stamina', type=int, default=3)
+    forbidden.add_argument('--preview', action='store_true')
+    forbidden.add_argument('--capture', choices=['FramePool','ScreenDC'], default='FramePool')
+    forbidden.add_argument('--input', choices=['PostMessage','SendMessage','Seize'], default='Seize')
     args = parser.parse_args()
     if args.command in (None, 'gui'):
         from .gui import launch
@@ -77,6 +83,12 @@ def main():
             if session.error:
                 raise RuntimeError(session.error)
             print(json.dumps({'status': 'observed', 'seconds': args.seconds, 'log': str(session.log_path)}))
+        elif args.command == 'forbidden':
+            from .forbidden import ForbiddenOptions, run_forbidden
+            result = run_forbidden(session, ForbiddenOptions(args.rounds,args.minimum_stamina),
+                                   args.preview,args.capture,args.input)
+            if not args.preview and not result['succeeded']:
+                raise SystemExit(2)
         else:
             plan = load_plan(args.plan)
             if args.rounds is not None:

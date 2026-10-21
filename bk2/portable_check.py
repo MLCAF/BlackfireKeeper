@@ -36,6 +36,21 @@ def run():
         pass
     recognizer = PortableRecognizer(root / 'assets', controller)
     try:
+        from .forbidden_vision import ForbiddenVision, RULES
+        for rule in RULES.values():
+            recognizer.template_metadata(root/'assets/image'/rule['template'])
+        chest = Image.new('RGB',(1395,720),(35,35,35))
+        for name,point in [('treasure_title',(650,260)),('free_open',(500,465))]:
+            with Image.open(root/'assets/image/forbidden'/f'{name}.png') as target:
+                chest.paste(target.convert('RGB'),point)
+        vision=ForbiddenVision(recognizer,threading.Event())
+        scene,button=vision.observe(np.asarray(chest)[:,:,::-1].copy())
+        if scene!='chest_free' or button is None:
+            raise RuntimeError('Portable forbidden free chest recognition failed')
+        chest.paste((35,35,35),(480,440,600,510))
+        scene,button=vision.observe(np.asarray(chest)[:,:,::-1].copy())
+        if scene!='chest_free' or button is not None:
+            raise RuntimeError('Portable forbidden accepted a missing free button')
         template = Image.open(root / 'assets/image/一本名称.png').convert('RGB')
         canvas = Image.new('RGB', (1400, 800), (40, 40, 40))
         canvas.paste(template, (100, 100))

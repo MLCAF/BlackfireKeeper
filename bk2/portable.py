@@ -70,7 +70,7 @@ def main():
                 return
             if '--select-game' in sys.argv:
                 sys.argv = [sys.argv[0], 'gui']
-        elif sys.argv[1] in ('check', 'observe', 'run', 'preview') and not os.environ.get('BLACKFIRE_EXE'):
+        elif sys.argv[1] in ('check', 'observe', 'run', 'preview', 'forbidden') and not os.environ.get('BLACKFIRE_EXE'):
             value = saved_game(root)
             if value:
                 os.environ['BLACKFIRE_EXE'] = str(value)
