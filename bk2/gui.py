@@ -36,12 +36,19 @@ class App:
         self.active_total = None
         from .food import FoodTimerStore
         from .runtime import ROOT
+        from .notifications import TaskSounds,load_enabled
+        try:sound_enabled=load_enabled(ROOT)
+        except (ValueError,OSError) as exc:
+            sound_enabled=True;self.emit('log',f'提示音设置读取失败，保留原文件：{exc}')
+        self.task_sounds=TaskSounds(ROOT,sound_enabled,log=lambda message:self.emit('log',message))
         self.food_next_check = FoodTimerStore(ROOT/'config/runtime/food_schedule.json').load(time.time())
         self.last_memory_json = None
         from .dashboard import build
         build(self)
         from .forbidden_panel import ForbiddenPanel
         self.forbidden_panel = ForbiddenPanel(self)
+        from .window_panel import WindowPanel
+        self.window_panel = WindowPanel(self)
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.report_callback_exception = lambda typ, value, tb: self.report_error(value, tb)
         root.after(100, self.drain)
@@ -70,7 +77,9 @@ class App:
         from .runtime import EXE
         try:
             with input_lease():
-                standardize_open_game(self.preparation_stop, self.emit, EXE)
+                from .window_options import load_resolution
+                from .runtime import ROOT
+                standardize_open_game(self.preparation_stop, self.emit, EXE, preferred=load_resolution(ROOT))
         except InputLeaseBusy:
             self.emit('log', '其他 BK2 正在操作游戏，已跳过启动时的尺寸调整；停止原挂机后再开始本窗口的任务')
         except InterruptedError:
@@ -223,10 +232,7 @@ class App:
         self.task_text.set('识别预览 · 不点击游戏' if dry_run else '正在准备本次任务')
         def work():
             try:
-                result = run_plan(session, plan, dry_run, capture, input_method)
-                if result['succeeded']:
-                    import winsound
-                    winsound.MessageBeep(winsound.MB_OK)
+                run_plan(session, plan, dry_run, capture, input_method)
             except Exception as exc:
                 self.report_error(exc)
         self.worker = threading.Thread(target=work, daemon=True)
@@ -305,6 +311,7 @@ class App:
                 kind, data = self.events.get_nowait()
             except queue.Empty:
                 break
+            if not self.closing:self.task_sounds.observe(kind,data)
             if kind in ('memory', 'memory_change'):
                 self.show_memory(data)
             elif kind == 'stats':
@@ -368,7 +375,8 @@ class App:
             im.thumbnail((max(100, self.screen.winfo_width()), max(100, self.screen.winfo_height())))
             self.preview_image = ImageTk.PhotoImage(im)
             self.screen.configure(image=self.preview_image)
-        busy = bool(self.worker and self.worker.is_alive())
+        busy = bool((self.worker and self.worker.is_alive()) or
+                    (self.preparation_thread and self.preparation_thread.is_alive()))
         self.save_button.configure(state='disabled' if busy else 'normal')
         self.connect_button.configure(state='disabled' if busy or self.closing else 'normal')
         for widget in self.settings_widgets:
@@ -384,6 +392,7 @@ class App:
             self.manual_button.pack_forget()
         fresh = self.refresh_dashboard()
         self.forbidden_panel.refresh(fresh, busy)
+        self.window_panel.refresh(busy)
         blocked = self.start_block_reason()
         for button in (self.preview_button, self.run_button):
             button.configure(state='normal' if fresh and not busy and not blocked else 'disabled')

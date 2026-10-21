@@ -8,6 +8,15 @@ from types import SimpleNamespace
 # Synchronous messages acknowledge map/detail controls without moving the cursor.
 FORBIDDEN_INPUT = 'SendMessage'
 
+# Unnamed slots are deliberately unavailable until their navigation is verified.
+FORBIDDEN_REALMS = (
+    ('golden_kingdom', '黄金古国', True),
+    ('pending_2', '禁域 2', False),
+    ('pending_3', '禁域 3', False),
+    ('pending_4', '禁域 4', False),
+    ('pending_5', '禁域 5', False),
+)
+
 LABELS = dict(navigate='定位禁域入口', navigation_wait='等待导航结果', ready='准备探索',
               encounter='等待探索事件', battle='自动战斗中', auto_wait='确认自动战斗开启',
               xp_wait='等待战利品', loot_wait='确认战斗结束', chest_wait='确认免费宝箱领取',
@@ -25,13 +34,21 @@ CLICK_OFFSETS = {'explore': (0,-55), 'menu': (0,-45), 'map': (0,-150)}
 class ForbiddenOptions:
     rounds: int = 10
     minimum_stamina: int = 3
+    realm_id: str = 'golden_kingdom'
 
     def validate(self):
+        if self.realm_id not in {key for key, _, supported in FORBIDDEN_REALMS if supported}:
+            raise ValueError('所选禁域待支持，不能启动；目前仅支持黄金古国')
         if type(self.rounds) is not int or not 1 <= self.rounds <= 10000:
             raise ValueError('禁域探索次数必须为 1 到 10000')
         if type(self.minimum_stamina) is not int or not 3 <= self.minimum_stamina <= 320:
             raise ValueError('禁域体力下限必须为 3 到 320')
         return self
+
+    @property
+    def realm_name(self):
+        self.validate()
+        return next(name for key, name, _ in FORBIDDEN_REALMS if key == self.realm_id)
 
 
 class ForbiddenFlow:

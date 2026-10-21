@@ -90,18 +90,20 @@ class Geometry:
             raise RuntimeError('设置游戏窗口尺寸失败')
 
 
-def standardize(adapter, window, stop, clock=time.monotonic):
+def standardize(adapter, window, stop, clock=time.monotonic, preferred=None):
+    from .window_options import validate_size
+    preferred=validate_size(preferred)
     report=dict(target_client_size=list(STANDARD_CLIENT_SIZE),status='checking',resize_requests=0,
-                restore_requests=0, observations=[])
+                restore_requests=0, observations=[], requested_client_size=preferred)
     try:
-        return _standardize(adapter, window, stop, clock, report)
+        return _standardize(adapter, window, stop, clock, report, preferred)
     except Exception as exc:
         report.update(status='stopped' if isinstance(exc, InterruptedError) else 'failed',error=str(exc))
         exc.window_geometry=report
         raise
 
 
-def _standardize(adapter, window, stop, clock, report):
+def _standardize(adapter, window, stop, clock, report, preferred):
     deadline=clock()+3
     def guard():
         if stop.is_set():raise InterruptedError('窗口尺寸调整已停止')
@@ -122,7 +124,7 @@ def _standardize(adapter, window, stop, clock, report):
         before=None if was_minimized else adapter.size(window)
         report['initial_minimized']=bool(was_minimized)
         report['before_client_size']=None if before is None else list(before)
-        if before==STANDARD_CLIENT_SIZE and visible(before):
+        if before==STANDARD_CLIENT_SIZE and preferred in (None, STANDARD_CLIENT_SIZE) and visible(before):
             report.update(status='already_standard',actual_client_size=list(before));return report
         if was_minimized or not adapter.restored(window):
             report['phase']='restore'
@@ -136,7 +138,7 @@ def _standardize(adapter, window, stop, clock, report):
                 actual=None if minimized else adapter.size(window)
                 report['observations'].append(dict(minimized=bool(minimized),normal=bool(restored),
                     client_size=None if actual is None else list(actual)))
-                standard_visible=actual==STANDARD_CLIENT_SIZE and visible(actual)
+                standard_visible=actual==STANDARD_CLIENT_SIZE and preferred in (None, STANDARD_CLIENT_SIZE) and visible(actual)
                 stable=stable+1 if standard_visible else 0
                 if stable>=2:
                     report.update(status='restored_standard',actual_client_size=list(actual));return report
@@ -155,13 +157,19 @@ def _standardize(adapter, window, stop, clock, report):
         edge_aligned=(work_size[0]>=STANDARD_CLIENT_SIZE[0]
                       and work_size[0]<STANDARD_CLIENT_SIZE[0]+frame[0]
                       and work_size[1]>=STANDARD_CLIENT_SIZE[1]+frame[1])
-        target=STANDARD_CLIENT_SIZE if edge_aligned else select_client_size(work_size,frame)
+        if preferred is not None:
+            target=preferred
+            edge_aligned=edge_aligned and target==STANDARD_CLIENT_SIZE
+            if not edge_aligned and any(target[i]+frame[i]>work_size[i] for i in range(2)):
+                raise RuntimeError(f'所选客户区 {target[0]}×{target[1]} 加上边框与标题栏后放不进当前工作区；请选择更小尺寸或自动适配')
+        else:
+            target=STANDARD_CLIENT_SIZE if edge_aligned else select_client_size(work_size,frame)
         ow,oh=target[0]+frame[0],target[1]+frame[1]
         report.update(phase='resize',outer_rect=list(outer),work_area=list(work),
             target_client_size=list(target),frame_size=list(frame),
             adaptive=target!=STANDARD_CLIENT_SIZE,
             calculated_client_ceiling=list(fit_client_size(work_size,frame)),
-            size_policy='largest_validated_fit',
+            size_policy='manual' if preferred else 'largest_validated_fit',
             scale=target[1]/STANDARD_CLIENT_SIZE[1])
         if before==target and visible(before):
             report.update(status='already_fitted',actual_client_size=list(before));return report
@@ -192,15 +200,15 @@ def _standardize(adapter, window, stop, clock, report):
         raise RuntimeError(f'游戏客户区未能稳定到 {target[0]}×{target[1]}（当前 {actual[0]}×{actual[1]}）或未完整显示，请检查游戏最小窗口尺寸与工作区；已停止连接')
 
 
-def standardize_open_game(stop, emit, expected_exe):
+def standardize_open_game(stop, emit, expected_exe, preferred=None):
     from vendor_core.windows import Windows
     windows=Windows()
     candidates=[w for w in windows.list_game_windows() if Path(w.executable).resolve()==Path(expected_exe).resolve()]
     if not candidates:
-        emit('log','暂未找到游戏窗口；开始识别时会按工作区等比例调整，最大客户区 1920×991')
+        emit('log','暂未找到游戏窗口；下次连接或开始识别时会应用已选窗口尺寸')
         return None
     if len(candidates)!=1:raise RuntimeError('发现多个游戏窗口，无法确定需要调整的窗口')
-    result=standardize(Geometry(windows),candidates[0],stop)
+    result=standardize(Geometry(windows),candidates[0],stop,preferred=preferred)
     emit('window_geometry',result)
     width,height=result['actual_client_size']
     emit('log',f'游戏客户区已核验为 {width}×{height} 物理像素；截图短边统一为 720，未改变系统显示分辨率')

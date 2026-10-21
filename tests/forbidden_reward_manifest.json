@@ -1,0 +1,38 @@
+[
+  {
+    "template": "forbidden/xp_title_1920.png",
+    "client": [
+      1920,
+      991
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      641,
+      192,
+      111,
+      26
+    ],
+    "sha256": "92bdd5993cfa6e5db07195a569fc1a81c6bf2d4dab7620eda081d91d850bed5d"
+  },
+  {
+    "template": "forbidden/continue_1920.png",
+    "client": [
+      1920,
+      991
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      675,
+      461,
+      45,
+      30
+    ],
+    "sha256": "60de33187665f2f2fe0e6322b83fcd9d81e36a771989d5d5f1aea1e5ade03308"
+  }
+]

@@ -15,8 +15,9 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
     def __init__(self, root, window, capture_method='FramePool', input_method='Seize', preparation_stop=None):
         from vendor_core.windows import Windows
         from .window_geometry import Geometry, standardize
+        from .window_options import load_resolution
         self.geometry_stop = preparation_stop or threading.Event()
-        self.window_geometry = standardize(Geometry(Windows()), window, preparation_stop or threading.Event())
+        self.window_geometry = standardize(Geometry(Windows()), window, preparation_stop or threading.Event(), preferred=load_resolution(root))
         super().__init__(root, window, capture_method, input_method)
 
     def guard(self):

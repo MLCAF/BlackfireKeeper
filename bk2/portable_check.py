@@ -185,6 +185,22 @@ def run():
             app = App(window)
             window.update_idletasks()
             assert app.session is None, 'Self-test must not connect to game'
+            import wave
+            for sound in ('completed','error'):
+                with wave.open(str(root/'assets/sounds'/f'{sound}.wav')) as wav:
+                    assert wav.getnchannels()==1 and wav.getnframes()>0
+            played=[]
+            app.task_sounds.player=played.append
+            app.task_sounds.enabled=True
+            app.emit('error','offline notification probe')
+            app.emit('batch_result',dict(succeeded=True,preview=False,completed_runs=0,reason='offline probe'))
+            app.drain()
+            assert played==['error','completed'], played
+            assert len(app.forbidden_panel.realm_buttons) == 5
+            assert app.forbidden_panel.realm.get() == 'golden_kingdom'
+            assert sum(supported for _, supported in app.forbidden_panel.realm_buttons) == 1
+            assert len(app.window_panel.choice['values']) == 5
+            assert app.window_panel.value.get() in app.window_panel.choice['values']
         finally:
             for callback in window.tk.call('after', 'info'):
                 window.after_cancel(callback)

@@ -53,6 +53,8 @@ def build(app):
               foreground=[('disabled', '#8aa59c')])
     style.configure('TCheckbutton', background=PANEL, foreground=INK, padding=2)
     style.map('TCheckbutton', background=[('active', PANEL)], foreground=[('disabled', '#64778d')])
+    style.configure('TRadiobutton', background=PANEL, foreground=INK, padding=2)
+    style.map('TRadiobutton', background=[('disabled', PANEL), ('active', PANEL)], foreground=[('disabled', '#64778d')])
     style.configure('TCombobox', fieldbackground=ROW, background=ROW, foreground=INK,
                     arrowcolor=MUTED, padding=5, borderwidth=0, bordercolor=ROW,
                     lightcolor=ROW, darkcolor=ROW)
