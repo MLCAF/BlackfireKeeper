@@ -1,5 +1,11 @@
 # 黑火守望（BlackfireKeeper）
 
+**[下载 Windows x64 便携 EXE 版 · v0.7.0（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.0/BlackfireKeeper-v0.7.0-windows-x64.zip)**
+
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.7.0) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.0/BlackfireKeeper-v0.7.0-windows-x64.zip.sha256)
+
+完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
+
 当前公开测试版：**黑火守望 v0.7.0**（首次公开测试版为 v0.1.0）。
 
 v0.7.0 新增禁域五行单选列表：黄金古国可选，其余四项待支持。新增“窗口设置”：可选自动适配或 1920×991、1600×826、1440×743、1280×661，并单独保存。修复 1920×991 下禁域快速战斗后经验奖励漏识别。见 [版本说明](RELEASE_v0.7.0.md)。
@@ -14,7 +20,7 @@ v0.5.1 修复高亮主城锚点漏识别、领取边界停在关卡页、最小�
 
 v0.4.1 修复六本末层“完成冒险”传送门漏识别：增加局部传送门与文字双重校验，保持 0.95 阈值及原有返回页面确认。源码与便携版同步更新，详见 [修复说明](RELEASE_v0.4.1.md)。
 
-v0.4.0 起提供 Windows x64 便携 EXE、首次选择游戏路径及离线自检。当前下载发布附件中的 `BlackfireKeeper-v0.6.0-windows-x64.zip`，完整解压后双击 `BlackfireKeeper.exe`，无需另装 Python。不要只复制 EXE；GitHub 自动生成的 Source code ZIP 仍是源码版，需要下方的 Python 安装步骤。
+v0.4.0 起提供 Windows x64 便携 EXE、首次选择游戏路径及离线自检。当前版本请使用本页顶部的便携版下载入口；源码安装步骤见下方。
 
 详细操作、只领取模式、体力阈值、诊断和保留设置的更新步骤见 [使用说明](使用说明.md)，也可下载后双击 [HTML 使用说明](使用说明.html)。构建及验证边界见 [便携版说明](docs/PORTABLE_VALIDATION.md)。
 
