@@ -1,0 +1,67 @@
+name: Publish Windows portable
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable version tag
+        required: true
+        type: string
+      source_sha:
+        description: Exact 40-character tagged source commit
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: portable-release-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_REPO: MLCAF/BlackfireKeeper
+      EXPECTED_PRIVATE: 'false'
+      ARTIFACT_PREFIX: BlackfireKeeper
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_SHA: ${{ inputs.source_sha }}
+    defaults:
+      run:
+        working-directory: source
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: release-tools
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+          cache: pip
+      - name: Verify repository boundary and exact source
+        run: python -X utf8 ../release-tools/packaging/publish_portable.py verify-source
+      - run: python -m pip install -r requirements-build.txt
+      - name: Build portable package from tag
+        run: python -X utf8 packaging/build_portable.py
+      - name: Run portable offline self-test
+        shell: pwsh
+        run: |
+          $stem = "$env:ARTIFACT_PREFIX-$env:RELEASE_TAG-windows-x64"
+          & "./dist/$stem/$env:ARTIFACT_PREFIX-cli.exe" --self-test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Audit source, package, privacy and publish assets
+        run: python -X utf8 ../release-tools/packaging/publish_portable.py publish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-validation
+          path: |
+            source/dist/release-validation.json
+            source/dist/*/logs/portable-self-test.json
+          if-no-files-found: ignore
