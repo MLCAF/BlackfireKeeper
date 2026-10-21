@@ -53,8 +53,12 @@ jobs:
         shell: pwsh
         run: |
           $stem = "$env:ARTIFACT_PREFIX-$env:RELEASE_TAG-windows-x64"
-          & "./dist/$stem/$env:ARTIFACT_PREFIX-cli.exe" --self-test
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $exe = (Resolve-Path "./dist/$stem/$env:ARTIFACT_PREFIX-cli.exe").Path
+          # A real console supports Chinese output on English Windows runners.
+          $check = Start-Process -FilePath $exe -ArgumentList '--self-test' -WindowStyle Hidden -Wait -PassThru
+          $report = "./dist/$stem/logs/portable-self-test.json"
+          if (Test-Path -LiteralPath $report) { Get-Content -LiteralPath $report -Encoding utf8 }
+          if ($check.ExitCode -ne 0) { exit $check.ExitCode }
       - name: Audit source, package, privacy and publish assets
         run: python -X utf8 ../release-tools/packaging/publish_portable.py publish
       - uses: actions/upload-artifact@v4
