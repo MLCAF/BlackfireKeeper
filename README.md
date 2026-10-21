@@ -10,6 +10,19 @@
 
 v0.7.0 新增禁域五行单选列表：黄金古国可选，其余四项待支持。新增“窗口设置”：可选自动适配或 1920×991、1600×826、1440×743、1280×661，并单独保存。修复 1920×991 下禁域快速战斗后经验奖励漏识别。见 [版本说明](RELEASE_v0.7.0.md)。
 
+## 参考项目与致谢
+
+本项目的开发参考了以下挂机脚本，感谢原作者及贡献者的工作：
+
+| 参考项目 | 参考与使用说明 |
+|---|---|
+| [AALC · AhabAssistantLimbusCompany](https://github.com/KIYI671/AhabAssistantLimbusCompany) | Limbus Company 的 PC 端挂机助手，是本项目的开发参考项目之一。本项目使用的 OCR 模型和字典还直接来自已有 AALC 参考包，具体复制记录与文件哈希见 [OCR 来源记录](assets/model/ocr/cooldown/SOURCE.md)。 |
+| **BBchannel**（FGO 自动刷本辅助工具） | 本项目的开发参考项目之一，参考材料为本地 BBchannel 软件包。该包未提供可核实的上游仓库链接，因此此处按项目名称致谢。 |
+
+本项目在这些参考材料的基础上，围绕 Blackfire Crusade 的实际界面和挂机需求持续开发、适配与验证。截图、识别和受控输入使用 [MaaFramework](https://github.com/MaaXYZ/MaaFramework)；OCR 模型的上游为 [RapidOCR](https://github.com/RapidAI/RapidOCR) 与 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)。直接使用的资源、依赖及许可信息见 [第三方资源说明](THIRD_PARTY_NOTICES.md)。
+
+## 历史更新
+
 v0.5.5 修复小工作区无法容纳标准窗口的问题：自动等比例缩小，保留 720 短边坐标和现有阈值，并补充实测的小窗口模板。验证范围见 [更新说明](RELEASE_v0.5.5.md)。
 
 v0.5.4 修复主城误识别为钻石商店，以及完成冒险返回关卡页后等待超时；保留现有挂机设置和冷却记录。详见 [更新说明](RELEASE_v0.5.4.md)。
