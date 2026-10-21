@@ -13,7 +13,7 @@ def run():
     from maa.pipeline import JOCR, JRecognitionType
     from maa.library import Library
     from vendor_core.backend import MaaRecognizer
-    from .scene_variants import SceneVariantMixin, SCENE_VARIANTS
+    from .scene_variants import SceneVariantMixin, VARIANT_GROUPS
     from .automation import load_plan
     from .gui import App
     from .version import version_info
@@ -71,7 +71,7 @@ def run():
             detail.paste(label.convert('RGB'), (568, 359))
         if recognizer.recognize(np.asarray(detail)[:, :, ::-1].copy(), close, threading.Event()) is None:
             raise RuntimeError('Portable detail close matching failed')
-        for original, (variant, region) in SCENE_VARIANTS.items():
+        for original, (variant, region) in (item for group in VARIANT_GROUPS for item in group.items()):
             canvas = Image.new('RGB', (1400, 800), (40, 40, 40))
             with Image.open(root / 'assets/image' / variant) as target:
                 canvas.paste(target.convert('RGB'), tuple(region[:2]))
@@ -106,6 +106,8 @@ def run():
             def restored(self,window):return False
             def size(self,window):return STANDARD_CLIENT_SIZE
             def restore(self,window):self.hidden=False;self.requests+=1
+            def outer_and_work(self,window):return (-8,-8,1928,1022),(0,0,1920,1040)
+            def client_origin(self,window):return (0,23)
         geometry=GeometryProbe()
         restored=standardize(geometry,None,threading.Event())
         if restored['status']!='restored_standard' or geometry.requests!=1:
@@ -123,6 +125,12 @@ def run():
         aligned=standardize(edge,None,threading.Event())
         if edge.rectangle!=(-8,0,1936,1030) or aligned['actual_client_rect']!=[0,31,1920,1022]:
             raise RuntimeError('Portable exact-client edge alignment regression')
+        from .window_geometry import fit_client_size, select_client_size
+        if (fit_client_size((1366,728),(16,39))!=(1335,689)
+                or select_client_size((1366,728),(16,39))!=(1280,661)):
+            raise RuntimeError('Portable adaptive window sizing failed')
+        from .coordinate_check import check_coordinates
+        coordinate_checks=check_coordinates()
         # Exercise the frozen diagnostic writer without a game connection.
         import tempfile
         from pathlib import Path
@@ -168,7 +176,8 @@ def run():
             window.destroy()
         report = dict(application=version_info(), result='passed',
             checks=['configuration', 'native_framework', 'native_toolkit', 'template_match', 'finish_portal', 'boundary_detail', 'scene_variants', 'highlight_home', 'levels_boundary', 'restore_policy', 'client_edge_alignment', 'diagnostic_bundles', 'ocr', 'tk_dashboard'],
-            standard_client_size=list(STANDARD_CLIENT_SIZE), game_connected=False, game_input=False)
+            standard_client_size=list(STANDARD_CLIENT_SIZE), adaptive_coordinates=coordinate_checks,
+            game_connected=False, game_input=False)
         (root / 'logs').mkdir(exist_ok=True)
         (root / 'logs/portable-self-test.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
         print(json.dumps(report, ensure_ascii=False))

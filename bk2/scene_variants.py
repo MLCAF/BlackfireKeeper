@@ -13,14 +13,49 @@ SCENE_VARIANTS = {
     '放弃冒险提示正文.png': ('放弃冒险提示正文兼容.png', [600, 290, 300, 100]),
 }
 
+# Real 1280x661 client captures, normalized by Maa to a 720-pixel short side.
+# Selected navigation variants retain the selection ring, not just the icon.
+SMALL_WINDOW_VARIANTS = {
+    '钻石免费按钮.png': ('钻石免费按钮小窗.png', [210, 480, 340, 90]),
+    '去探险.png': ('去探险小窗.png', [430, 480, 550, 120]),
+    '钻石免费包标识.png': ('钻石免费包标识小窗.png', [210, 200, 340, 110]),
+    '钻石商店关闭核心.png': ('钻石商店关闭核心小窗.png', [1110, 50, 180, 160]),
+    '体力工坊标题.png': ('体力工坊标题小窗.png', [500, 130, 400, 150]),
+    '体力收集文字.png': ('体力收集文字小窗.png', [650, 440, 300, 120]),
+    '四本名称.png': ('四本名称小窗.png', [0, 440, 1395, 110]),
+    '五本名称.png': ('五本名称小窗.png', [0, 440, 1395, 110]),
+    '六本名称.png': ('六本名称小窗.png', [0, 440, 1395, 110]),
+    '城镇.png': ('城镇小窗.png', [0, 560, 150, 160]),
+    '副本详情标识.png': ('副本详情标识小窗.png', [450, 320, 500, 100]),
+    '地下城导航选中.png': ('地下城导航选中小窗.png', [400, 560, 350, 160]),
+    '关卡导航选中.png': ('关卡导航选中小窗.png', [400, 560, 150, 160]),
+    '一本名称.png': ('一本名称小窗.png', [0, 440, 1395, 110]),
+    '二本名称.png': ('二本名称小窗.png', [0, 440, 1395, 110]),
+    '三本名称.png': ('三本名称小窗.png', [0, 440, 1395, 110]),
+    '传送门.png': ('传送门小窗.png', [0, 560, 150, 160]),
+}
+
+MEDIUM_WINDOW_VARIANTS = {
+    '钻石免费按钮.png': ('钻石免费按钮中窗.png', [210, 480, 340, 90]),
+    '钻石免费包标识.png': ('钻石免费包标识中窗.png', [210, 200, 340, 110]),
+    '体力工坊标题.png': ('体力工坊标题中窗.png', [500, 130, 400, 150]),
+    '五本名称.png': ('五本名称中窗.png', [0, 440, 1395, 110]),
+}
+
+LARGE_WINDOW_VARIANTS = {
+    '二本名称.png': ('二本名称1600.png', [0, 440, 1395, 110]),
+}
+
+VARIANT_GROUPS = (SCENE_VARIANTS, SMALL_WINDOW_VARIANTS, MEDIUM_WINDOW_VARIANTS, LARGE_WINDOW_VARIANTS)
+
 
 class SceneVariantMixin:
     def recognize(self, image, rule, stop):
         hit = super().recognize(image, rule, stop)
-        variant = SCENE_VARIANTS.get(rule['template'])
-        if hit is not None or variant is None or stop.is_set():
+        variants = [group[rule['template']] for group in VARIANT_GROUPS
+                    if rule['template'] in group]
+        if hit is not None or not variants or stop.is_set():
             return hit
-        variants = [variant]
         if rule['template'] == '主界面锚点.png':
             variants.append(('主界面高亮建筑核心.png', [250, 150, 300, 230]))
         for template, region in variants:

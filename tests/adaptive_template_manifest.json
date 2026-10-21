@@ -1,0 +1,420 @@
+[
+  {
+    "template": "钻石免费按钮小窗.png",
+    "source_label": "shop_ready1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      343,
+      503,
+      69,
+      35
+    ],
+    "sha256": "8f560ee03ece65af950aae33d7e4f5ade3395c2654dccb7570a0742b62d0328e"
+  },
+  {
+    "template": "钻石免费按钮中窗.png",
+    "source_label": "shop_ready1440.png",
+    "client": [
+      1440,
+      743
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      344,
+      503,
+      69,
+      35
+    ],
+    "sha256": "c3622d6fb6e7511b81dc3f619cf18e2776ec81df3dcbb195ff41e00d3e0fe8b1"
+  },
+  {
+    "template": "去探险小窗.png",
+    "source_label": "detail_open_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      457,
+      501,
+      480,
+      77
+    ],
+    "sha256": "ebe6c0f04dc784c9db99771ad481b871c66d7f6426296d4a52ec2e65ebf7d0ad"
+  },
+  {
+    "template": "二本名称1600.png",
+    "source_label": "names123_1600.png",
+    "client": [
+      1600,
+      826
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      548,
+      460,
+      170,
+      29
+    ],
+    "sha256": "04a6777950668ecdaca1c9e3039732f6fe9481787e51e6952faf5706cac78ab1"
+  },
+  {
+    "template": "钻石免费包标识小窗.png",
+    "source_label": "shop_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      244,
+      239,
+      270,
+      41
+    ],
+    "sha256": "c640104503a2be6240ed9a640e5dfb46fb9c0df2baa6587a3786d046aee3bb5f"
+  },
+  {
+    "template": "钻石免费包标识中窗.png",
+    "source_label": "shop_1440.png",
+    "client": [
+      1440,
+      743
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      244,
+      239,
+      270,
+      41
+    ],
+    "sha256": "b89fc9fdedadf04accac5eb0da32e98533eeed381d4ee4b05858e0f6b7b1b84c"
+  },
+  {
+    "template": "钻石商店关闭核心小窗.png",
+    "source_label": "shop_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      1168,
+      126,
+      31,
+      29
+    ],
+    "sha256": "e1d7c46cc69d1d8c9e22f5311317029aab2f4702eb0f9f0e84968ee7271f147e"
+  },
+  {
+    "template": "体力工坊标题中窗.png",
+    "source_label": "bakery_1440.png",
+    "client": [
+      1440,
+      743
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      651,
+      180,
+      93,
+      24
+    ],
+    "sha256": "bc373fa2dd84b8e6cd1d644cf4fe90e8239d177ecb6c987e83df1297d77b40a1"
+  },
+  {
+    "template": "五本名称中窗.png",
+    "source_label": "names456_1440.png",
+    "client": [
+      1440,
+      743
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      555,
+      462,
+      165,
+      29
+    ],
+    "sha256": "42aa3f4a1041ab66a8af7495bf8c1693ae9295f51b2f0fda2178c0bb2a015d2a"
+  },
+  {
+    "template": "体力工坊标题小窗.png",
+    "source_label": "bakery_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      650,
+      181,
+      93,
+      24
+    ],
+    "sha256": "4547585086583875ed51c33d2d3cf98de460e22e3a389c3629d168a21f26be4a"
+  },
+  {
+    "template": "体力收集文字小窗.png",
+    "source_label": "bakery_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      753,
+      472,
+      87,
+      28
+    ],
+    "sha256": "a12a3986f2cd38388fc2e93072ccba5eaef9b26aeef890c0ec1c880f68a10f7d"
+  },
+  {
+    "template": "四本名称小窗.png",
+    "source_label": "names456_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      177,
+      460,
+      167,
+      28
+    ],
+    "sha256": "cabe72bff100ca3dccf4189430c7287785284c0d9efeded469a1eae4a3bf28ca"
+  },
+  {
+    "template": "五本名称小窗.png",
+    "source_label": "names456_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      555,
+      462,
+      165,
+      29
+    ],
+    "sha256": "213766438051ba007126714dec76d1df3a420963d4c2147a8404d1f33ceea9cf"
+  },
+  {
+    "template": "六本名称小窗.png",
+    "source_label": "names456_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      932,
+      463,
+      160,
+      28
+    ],
+    "sha256": "f8e9bb890e33e2860d99901b71f9b9bdb4b4614aee4a034e2d3fd75fb57b9ffa"
+  },
+  {
+    "template": "城镇小窗.png",
+    "source_label": "dungeons_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      14,
+      582,
+      93,
+      123
+    ],
+    "sha256": "2ba46a96b33559e43e17e0a5d682847577bb780d1334926acf2f75a6197e6aa4"
+  },
+  {
+    "template": "副本详情标识小窗.png",
+    "source_label": "detail_open_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      563,
+      352,
+      47,
+      31
+    ],
+    "sha256": "1e0e665c03540d4a5634feee05d54815e0bf9f8cb9ea1b537d1266e7255de27f"
+  },
+  {
+    "template": "地下城导航选中小窗.png",
+    "source_label": "dungeons_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      535,
+      590,
+      108,
+      122
+    ],
+    "sha256": "891c3c4d015ea2449965c3b6e713206ab68ac54decc2adf5327e3c0ef5e8458b"
+  },
+  {
+    "template": "关卡导航选中小窗.png",
+    "source_label": "list_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      430,
+      590,
+      108,
+      122
+    ],
+    "sha256": "e91d2e0318902e396e023b52950772a04dcc1277a96c15cd3f63ee2387c475df"
+  },
+  {
+    "template": "一本名称小窗.png",
+    "source_label": "dungeons_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      171,
+      460,
+      169,
+      30
+    ],
+    "sha256": "0c1449a139500720fe3247056be4f09d5ed1e02816fae697d6bc0153e8d1919e"
+  },
+  {
+    "template": "二本名称小窗.png",
+    "source_label": "dungeons_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      549,
+      460,
+      169,
+      30
+    ],
+    "sha256": "297fffcaa92be88ad1a0f9eadffd242a3cb89f1ce292a1682559b3a48bdb68ca"
+  },
+  {
+    "template": "三本名称小窗.png",
+    "source_label": "dungeons_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      926,
+      460,
+      169,
+      30
+    ],
+    "sha256": "7d2174dabcf95ea496c45bb53ea2570ba5ed5ac74533593bc1c35d8307aebd99"
+  },
+  {
+    "template": "传送门小窗.png",
+    "source_label": "home_1280.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      17,
+      604,
+      85,
+      103
+    ],
+    "sha256": "1e670ca2b1e2f09ffe60bb7d1ab1f7e9e8e3a95ef8d1bdd53cdc7707604185cc"
+  }
+]
