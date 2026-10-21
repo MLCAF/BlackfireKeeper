@@ -44,6 +44,10 @@ class MigrationTests(unittest.TestCase):
         manifest=json.loads((ROOT/'tests/migration_manifest.json').read_text(encoding='utf-8'))
         patches = json.loads((ROOT/'tests/vendor_patches_20261020.json').read_text(encoding='utf-8'))
         self.assertEqual(set(patches), {'vendor_core/config.py', 'vendor_core/runner.py', 'vendor_core/windows.py'})
+        background = json.loads((ROOT/'tests/vendor_patches_20261021.json').read_text(encoding='utf-8'))
+        self.assertEqual(set(background), {'vendor_core/backend.py'})
+        self.assertFalse(set(patches) & set(background))
+        patches.update(background)
         for entry in manifest:
             # Editable user plan is deliberately not frozen after migration.
             if entry['target']=='config/dungeon_plan.json': continue

@@ -5,6 +5,7 @@ from pathlib import Path
 from .runtime import Session, ROOT
 from .automation import load_plan, run_plan
 from .version import DISPLAY_NAME, version_info
+from .forbidden import FORBIDDEN_INPUT
 
 
 def main():
@@ -27,7 +28,7 @@ def main():
     forbidden.add_argument('--minimum-stamina', type=int, default=3)
     forbidden.add_argument('--preview', action='store_true')
     forbidden.add_argument('--capture', choices=['FramePool','ScreenDC'], default='FramePool')
-    forbidden.add_argument('--input', choices=['PostMessage','SendMessage','Seize'], default='Seize')
+    forbidden.add_argument('--input', choices=['PostMessage','SendMessage','Seize'], default=FORBIDDEN_INPUT)
     args = parser.parse_args()
     if args.command in (None, 'gui'):
         from .gui import launch

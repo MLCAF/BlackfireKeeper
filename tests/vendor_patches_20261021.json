@@ -1,0 +1,7 @@
+{
+  "vendor_core/backend.py": {
+    "base_sha256": "f27e2aad16022f28c0b7bcb4333dc3691270bd384e7ae3d37631a1d2d52d1ef6",
+    "patched_sha256": "d80118654642264529751becb953bbfa8047866f69c670d7d1ed0820aa7cb5a3",
+    "reason": "Optional held background click for forbidden controls; release on cancellation; existing click path unchanged"
+  }
+}

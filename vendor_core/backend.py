@@ -291,10 +291,27 @@ class MaaBackend(MaaRecognizer):
             self.win.foreground(self.window.hwnd)
         if stop.is_set() or pause.is_set():
             raise InterruptedError("点击已取消")
-        job = self.controller.post_click(*point)
-        self.wait(job, stop)
-        if not job.succeeded:
-            raise RuntimeError("点击发送失败，流程已停止")
+        hold = getattr(self, 'click_hold_seconds', 0.0)
+        if hold:
+            # Keep down/up in separate game frames for controls which poll input.
+            # Release even if cancellation or failed acknowledgement interrupts down.
+            job = self.controller.post_touch_down(*point)
+            try:
+                self.wait(job, stop)
+                if not job.succeeded:
+                    raise RuntimeError("鼠标按下发送失败")
+                if stop.wait(hold) or pause.is_set():
+                    raise InterruptedError("点击已取消")
+            finally:
+                release = self.controller.post_touch_up()
+                self.wait(release, threading.Event(), timeout=3)
+                if not release.succeeded:
+                    raise RuntimeError("鼠标释放发送失败，流程停止")
+        else:
+            job = self.controller.post_click(*point)
+            self.wait(job, stop)
+            if not job.succeeded:
+                raise RuntimeError("点击发送失败，流程已停止")
 
     def swipe(self, direction, stop, pause):
         """Horizontal list drag in normalized client coordinates, never desktop coordinates."""

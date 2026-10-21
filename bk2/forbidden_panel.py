@@ -4,7 +4,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 from dataclasses import asdict
-from .forbidden import ForbiddenOptions, run_forbidden
+from .forbidden import ForbiddenOptions, run_forbidden, FORBIDDEN_INPUT
 from .runtime import ROOT
 
 
@@ -44,7 +44,7 @@ class ForbiddenPanel:
         text(body,var=self.progress,size=12).pack(anchor='w',pady=8)
         text(body,'从主城、底部导航、黄金古国详情或探索页面开始。\n'
                   '探索耗费 3 点体力；低于下限或达到次数后停止。\n'
-                  '禁域使用前台点击，会移动鼠标；请保持游戏可见，运行中不要操作鼠标。\n'
+                  '禁域使用后台点击，不移动鼠标、不切换前台；请勿最小化游戏。\n'
                   '本模式独立运行，期间不轮换地下城、不执行定时领取。\n'
                   '未知页面、战败或结果确认超时会停止并保存诊断。',
              color=MUTED,justify='left').pack(anchor='w',pady=(12,0))
@@ -89,10 +89,8 @@ class ForbiddenPanel:
         except Exception as exc:
             app.report_error(exc)
             return
-        # Godot map/detail controls did not acknowledge message-only clicks in
-        # live validation. Keep this mode's foreground input independent of the
-        # user's existing dungeon input preference and saved plan.
-        capture,input_method=app.capture.get(),'Seize'
+        # Keep forbidden input independent of the saved dungeon preference.
+        capture,input_method='FramePool',FORBIDDEN_INPUT
         session=app.session
         session.operation_stop.clear()
         app.completed_runs=0

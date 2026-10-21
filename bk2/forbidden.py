@@ -5,6 +5,9 @@ import threading
 import time
 from types import SimpleNamespace
 
+# Synchronous messages acknowledge map/detail controls without moving the cursor.
+FORBIDDEN_INPUT = 'SendMessage'
+
 LABELS = dict(navigate='定位禁域入口', navigation_wait='等待导航结果', ready='准备探索',
               encounter='等待探索事件', battle='自动战斗中', auto_wait='确认自动战斗开启',
               xp_wait='等待战利品', loot_wait='确认战斗结束', chest_wait='确认免费宝箱领取',
@@ -192,7 +195,7 @@ class ForbiddenRunner:
                     preview=self.dry_run, completed_runs=self.flow.completed, reason=self.reason)
 
 
-def run_forbidden(session, options, dry_run=False, capture='FramePool', input_method='Seize'):
+def run_forbidden(session, options, dry_run=False, capture='FramePool', input_method=FORBIDDEN_INPUT):
     from .runtime import ROOT
     from .automation import input_lease, boundary_ready
     from .backend import DiagnosticBackend
@@ -202,6 +205,8 @@ def run_forbidden(session, options, dry_run=False, capture='FramePool', input_me
     from vendor_core.windows import Windows
 
     options.validate()
+    if input_method == FORBIDDEN_INPUT and capture != 'FramePool':
+        raise ValueError('禁域后台点击需要 FramePool 截图；ScreenDC 会切换前台窗口')
     session.wait_ready()
     boundary_ready(session)
     pid = session.snapshot['pid']
@@ -209,6 +214,8 @@ def run_forbidden(session, options, dry_run=False, capture='FramePool', input_me
                                       capture=capture, input_method=input_method)
 
     class MemoryBackend(DiagnosticBackend):
+        click_hold_seconds = .15 if input_method == FORBIDDEN_INPUT else 0.0
+
         def guard(self):
             super().guard()
             if session.stop_event.is_set() or session.operation_stop.is_set():

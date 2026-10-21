@@ -43,6 +43,7 @@ MEDIUM_WINDOW_VARIANTS = {
 }
 
 LARGE_WINDOW_VARIANTS = {
+    '体力收集文字.png': ('体力收集文字1600.png', [650, 440, 300, 120]),
     '二本名称.png': ('二本名称1600.png', [0, 440, 1395, 110]),
 }
 

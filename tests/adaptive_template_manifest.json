@@ -416,5 +416,24 @@
       103
     ],
     "sha256": "1e670ca2b1e2f09ffe60bb7d1ab1f7e9e8e3a95ef8d1bdd53cdc7707604185cc"
+  },
+  {
+    "template": "体力收集文字1600.png",
+    "source_label": "FoodCollect_timeout_20261021.png",
+    "client": [
+      1600,
+      826
+    ],
+    "normalized": [
+      1395,
+      720
+    ],
+    "crop": [
+      754,
+      472,
+      87,
+      28
+    ],
+    "sha256": "aa14257c715c5b2477ef88ee401e21b376c2f709f3dc8b2873f299a3ef27ccd4"
   }
 ]
