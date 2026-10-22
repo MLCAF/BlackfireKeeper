@@ -50,7 +50,7 @@ class SceneVariantTests(unittest.TestCase):
             self.assertIsNotNone(self.reco.recognize(frame,original,threading.Event()),name)
             self.assertEqual(original,frozen)
             self.assertIsNone(self.hit((frame*.4).astype(np.uint8),name,min_brightness_ratio=.85),name)
-            self.assertIsNone(self.hit(self.frame(template,1100,300),name),name)
+            self.assertIsNone(self.hit(self.frame(template,1000,300),name),name)
             self.assertIsNone(self.hit(frame,name,roi=[900,100,400,450]),name)
 
     def test_original_templates_still_match_without_fallback(self):

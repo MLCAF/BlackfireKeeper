@@ -435,5 +435,24 @@
       28
     ],
     "sha256": "aa14257c715c5b2477ef88ee401e21b376c2f709f3dc8b2873f299a3ef27ccd4"
+  },
+  {
+    "template": "副本入口进度小窗.png",
+    "source_label": "entrance.png",
+    "client": [
+      1280,
+      661
+    ],
+    "normalized": [
+      1394,
+      720
+    ],
+    "crop": [
+      573,
+      83,
+      41,
+      40
+    ],
+    "sha256": "65bf17e285f28660606ea1d8ea2afbf5b273e7f7d60fd3dec5dd0e08af74f1df"
   }
 ]

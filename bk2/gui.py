@@ -60,6 +60,10 @@ class App:
             self.events.put((kind, data))
 
     def report_error(self, error, tb=None):
+        if (isinstance(error, InterruptedError) and self.session
+                and (self.session.stop_event.is_set() or self.session.operation_stop.is_set())):
+            self.emit('log', str(error) or '操作已停止')
+            return
         if self.session:
             if hasattr(error, 'window_geometry'):
                 self.session.diagnostic_context['window_geometry'] = error.window_geometry
@@ -324,11 +328,11 @@ class App:
                 self.logs.see('end')
                 if int(self.logs.index('end-1c').split('.')[0]) > 1500:
                     self.logs.delete('1.0', '301.0')
-                if kind in ('error', 'memory_error', 'finished'):
+                if kind in ('error', 'memory_error', 'memory_cancelled', 'finished'):
                     self.status.set(text)
                     if kind in ('error', 'memory_error') and self.session and self.session.diagnostic_context.get('mode') == 'forbidden':
                         self.forbidden_panel.progress.set('禁域已停止：' + text)
-                    if kind == 'memory_error':
+                    if kind in ('memory_error', 'memory_cancelled'):
                         self.cooldown_status.set('冷却：内存读取失效，状态未知')
                         self.last_snapshot = None
                         self.memory_text.delete('1.0', 'end')

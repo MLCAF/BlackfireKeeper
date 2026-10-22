@@ -2,6 +2,19 @@
 import copy
 
 
+def boundary_loot_rules():
+    """Acknowledge a known loot modal without recording a new run/reward."""
+    return [dict(name='领取边界确认遗留战利品（小字双排弹窗）',
+        template='战利品小字确认.png', threshold=.95, roi=[500,380,400,220],
+        min_contrast_ratio=.85, min_brightness_ratio=.85,
+        requires_match=dict(template='战利品小字标题.png', threshold=.95,
+                            roi=[550,80,300,180], min_contrast_ratio=.85,
+                            min_brightness_ratio=.85),
+        action='click', next='Boundary', event='none', foreground=True,
+        verify_change=True, retry_center_clicks=1, retry_max_clicks=2,
+        retry_radius=0, max_activations=2, confirm_frames=2, cooldown_seconds=1)]
+
+
 def add_loot_recovery(profile):
     progress = profile['states']['Progress']['rules']
     old = next(r for r in progress if r['name']=='领取战利品后继续（宽弹窗兼容）')

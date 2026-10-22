@@ -113,6 +113,7 @@ class Batch:
         if self.clock() >= self.next_boundary_check or time.monotonic() < getattr(self.session,'memory_recovery_until',0):
             from .recovery import boundary_profile
             runner = self.execute(boundary_profile())
+            if self.stopped(): raise InterruptedError('操作已停止')
             if not runner.completed:
                 raise RuntimeError('等待领取期间未确认主城/副本列表：'+runner.reason)
             self.next_boundary_check = self.clock()+30
@@ -388,6 +389,7 @@ class Batch:
         if unfinished:
             self.session.publish('log',f"先接续未完成的{unfinished['display_name']}；完成后再处理领取和已勾选副本")
             ok, reason = self.dungeon(unfinished,resume=True)
+            if self.stopped(): raise InterruptedError('接续副本期间停止')
             if isinstance(ok,DungeonAbandoned):
                 self.scheduler.skipped_dungeons.add(unfinished['id'])
             elif ok:

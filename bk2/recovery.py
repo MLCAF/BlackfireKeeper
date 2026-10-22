@@ -24,9 +24,16 @@ def gameplay_states(config):
 
 def boundary_profile():
     from .diamond_profile import entry_recovery_rules
-    cleanup = entry_recovery_rules()
+    from .loot_profile import boundary_loot_rules
+    cleanup = boundary_loot_rules() + entry_recovery_rules()
     for rule in cleanup:
         rule['next'] = 'Boundary'
+    cleanup.append(dict(name='领取边界关闭遗留物品栏',
+        **evidence('物品栏关闭核心.png', roi=[960,30,100,90]),
+        requires_match=evidence('物品栏标题.png', roi=[620,30,160,70]),
+        foreground=True, action='click', next='Boundary', event='none',
+        verify_change=True, retry_center_clicks=1, retry_max_clicks=2,
+        retry_radius=0, max_activations=2, confirm_frames=2, cooldown_seconds=1))
     # A stopped selection may leave details open before the next service wait.
     # Close only this known modal; never press Explore or treat it as a run.
     cleanup.append(dict(name='领取边界关闭遗留副本详情', template='副本详情关闭.png',

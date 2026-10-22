@@ -142,6 +142,12 @@ class Session:
                             raise
                         current = self.rebind_after_disconnect(reader)
         except Exception as exc:
+            if isinstance(exc, InterruptedError) and (self.stop_event.is_set() or self.operation_stop.is_set()):
+                # Cancellation during a bounded bind is not a memory fault.
+                # Keep the snapshot unavailable: never reuse pre-disconnect data.
+                self.snapshot = {'status': 'unknown', 'error': '连接已取消'}
+                self.publish('memory_cancelled', '内存连接/重连已取消；再次挂机前请重新连接')
+                return
             if reader is not None:
                 self.diagnostic_context['player_binding'] = dict(reader.binding_diagnostics)
             self.error = str(exc)
@@ -188,7 +194,7 @@ class Session:
             raise MemoryReadError(self.error)
         if self.stop_event.is_set():
             raise InterruptedError('连接已取消')
-        require_fresh(self.snapshot, self.snapshot['pid'])
+        require_fresh(self.snapshot, (self.snapshot or {}).get('pid'))
 
     def stop(self):
         self.stop_event.set()

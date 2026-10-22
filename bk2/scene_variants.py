@@ -4,6 +4,7 @@ import copy
 # Each fallback is confined to the relevant part of the normalized 720px frame.
 # These are captured UI variants, not a general relaxation of matching thresholds.
 SCENE_VARIANTS = {
+    '未完成地下城提示.png': ('未完成地下城提示兼容.png', [500, 290, 400, 100]),
     '重连登录标识.png': ('重连登录标识兼容.png', [500, 200, 400, 180]),
     '主界面锚点.png': ('主界面锚点兼容.png', [200, 120, 350, 300]),
     '城镇.png': ('城镇兼容.png', [0, 560, 150, 160]),
@@ -16,6 +17,7 @@ SCENE_VARIANTS = {
 # Real 1280x661 client captures, normalized by Maa to a 720-pixel short side.
 # Selected navigation variants retain the selection ring, not just the icon.
 SMALL_WINDOW_VARIANTS = {
+    '副本入口进度.png': ('副本入口进度小窗.png', [550, 65, 100, 80]),
     '钻石免费按钮.png': ('钻石免费按钮小窗.png', [210, 480, 340, 90]),
     '去探险.png': ('去探险小窗.png', [430, 480, 550, 120]),
     '钻石免费包标识.png': ('钻石免费包标识小窗.png', [210, 200, 340, 110]),
