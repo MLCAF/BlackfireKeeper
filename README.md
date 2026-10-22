@@ -1,14 +1,14 @@
 # 黑火守望（BlackfireKeeper）
 
-**[下载 Windows x64 便携 EXE 版 · v0.7.1（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.1/BlackfireKeeper-v0.7.1-windows-x64.zip)**
+**[下载 Windows x64 便携 EXE 版 · v0.7.2（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.2/BlackfireKeeper-v0.7.2-windows-x64.zip)**
 
-[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.7.1) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.1/BlackfireKeeper-v0.7.1-windows-x64.zip.sha256)
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.7.2) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.2/BlackfireKeeper-v0.7.2-windows-x64.zip.sha256)
 
 完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
 
-当前公开测试版：**黑火守望 v0.7.1**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v0.7.2**（首次公开测试版为 v0.1.0）。
 
-v0.7.1 修复 10 月 22 日诊断中的遗留战利品／物品栏返回卡住、重连接续提示漏识别、1280×661 副本入口漏识别，以及主动停止被记录为错误的问题。识别阈值保持不变，保留本机挂机设置和冷却记录。见 [版本说明](RELEASE_v0.7.1.md)。
+v0.7.2 修复“欢迎归队”通知挡住主界面，以及经验祝福确认按钮漏识别。已知通知统一核验标题、正文与按钮后确认，仍保留原识别阈值、后台点击和有界停止。见 [版本说明](RELEASE_v0.7.2.md)。
 
 ## 参考项目与致谢
 
@@ -22,6 +22,8 @@ v0.7.1 修复 10 月 22 日诊断中的遗留战利品／物品栏返回卡住�
 本项目在这些参考材料的基础上，围绕 Blackfire Crusade 的实际界面和挂机需求持续开发、适配与验证。截图、识别和受控输入使用 [MaaFramework](https://github.com/MaaXYZ/MaaFramework)；OCR 模型的上游为 [RapidOCR](https://github.com/RapidAI/RapidOCR) 与 [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)。直接使用的资源、依赖及许可信息见 [第三方资源说明](THIRD_PARTY_NOTICES.md)。
 
 ## 历史更新
+
+v0.7.1 修复 10 月 22 日诊断中的遗留战利品／物品栏返回卡住、重连接续提示漏识别、1280×661 副本入口漏识别，以及主动停止被记录为错误的问题。识别阈值保持不变，保留本机挂机设置和冷却记录。见 [版本说明](RELEASE_v0.7.1.md)。
 
 v0.5.5 修复小工作区无法容纳标准窗口的问题：自动等比例缩小，保留 720 短边坐标和现有阈值，并补充实测的小窗口模板。验证范围见 [更新说明](RELEASE_v0.5.5.md)。
 

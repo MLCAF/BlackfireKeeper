@@ -1,0 +1,57 @@
+[
+  {
+    "template": "欢迎归队标题.png",
+    "crop": [
+      579,
+      172,
+      152,
+      47
+    ],
+    "source": "user-crop-1280x661",
+    "sha256": "fb7d2949c6baa4b1c3bd6472ee63096955c2099b13038e5c97ff0412e3961f4e"
+  },
+  {
+    "template": "欢迎归队称呼.png",
+    "crop": [
+      353,
+      233,
+      186,
+      38
+    ],
+    "source": "user-crop-1280x661",
+    "sha256": "124a8824194aa1f7d53ecb59723ba7828f24608affca90646e57cd53786e6b06"
+  },
+  {
+    "template": "欢迎归队确认.png",
+    "crop": [
+      620,
+      529,
+      71,
+      44
+    ],
+    "source": "user-crop-1280x661",
+    "sha256": "7eb70223c6b10f194a9e87e9f0158bda3c339f88f77884229e1df4723a78f1f5"
+  },
+  {
+    "template": "经验祝福确认文字.png",
+    "crop": [
+      668,
+      400,
+      57,
+      34
+    ],
+    "source": "diagnostic-125300",
+    "sha256": "c9f2356073aaa240c9db8c35547350c9f34c58b677b5a7c6ff6d6c52c23b4514"
+  },
+  {
+    "template": "经验祝福确认标题.png",
+    "crop": [
+      650,
+      248,
+      98,
+      34
+    ],
+    "source": "diagnostic-125300",
+    "sha256": "48a7f452925e5035af78c5eb4948bc3c7699d3178449f9eac2957a29fbb37682"
+  }
+]

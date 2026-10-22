@@ -55,6 +55,10 @@ VARIANT_GROUPS = (SCENE_VARIANTS, SMALL_WINDOW_VARIANTS, MEDIUM_WINDOW_VARIANTS,
 class SceneVariantMixin:
     def recognize(self, image, rule, stop):
         hit = super().recognize(image, rule, stop)
+        if hit is None and rule['template']=='确认buff.png' and not stop.is_set():
+            from .confirmation import BUFF_CONFIRM_TITLE
+            hit = self._recognize_variant(image,rule,stop,'经验祝福确认文字.png',
+                                          [650,380,110,85],BUFF_CONFIRM_TITLE)
         variants = [group[rule['template']] for group in VARIANT_GROUPS
                     if rule['template'] in group]
         if hit is not None or not variants or stop.is_set():
@@ -67,7 +71,7 @@ class SceneVariantMixin:
                 return hit
         return None
 
-    def _recognize_variant(self, image, rule, stop, template, region):
+    def _recognize_variant(self, image, rule, stop, template, region, context=None):
         h, w = image.shape[:2]
         x, y, rw, rh = rule.get('roi', [0, 0, w, h])
         vx, vy, vw, vh = region
@@ -83,4 +87,9 @@ class SceneVariantMixin:
                          min_contrast_ratio=max(.85, rule.get('min_contrast_ratio', 0)),
                          min_brightness_ratio=max(.85, rule.get('min_brightness_ratio', 0)))
         # Keep requires_match: a bakery or portal alone cannot authorize a click.
+        if context is not None:
+            condition=copy.deepcopy(context)
+            if 'requires_match' in alternate:
+                condition['requires_match']=alternate['requires_match']
+            alternate['requires_match']=condition
         return super().recognize(image, alternate, stop)

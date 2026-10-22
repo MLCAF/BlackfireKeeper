@@ -44,6 +44,10 @@ class ForbiddenVision:
             return None
 
         # Foreground modals take priority over dimmed exploration controls.
+        from .confirmation import notification_rules
+        welcome = self.backend.recognize(image, notification_rules()[0], self.stop)
+        if welcome:
+            return 'welcome', welcome
         if hit('treasure_title'):
             claimed = hit('claimed')
             if claimed:

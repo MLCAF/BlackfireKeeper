@@ -20,6 +20,7 @@ from .scheduler import MemoryScheduler, MemoryCooldown, DungeonAbandoned
 from .food import summarize as summarize_food
 from .food_profile import build_food_profile
 from .diamond_profile import build_diamond_profile
+from .confirmation import NOTICE_TEMPLATES
 
 
 def validate_food_options(plan):
@@ -463,10 +464,10 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
                 return super().swipe(*args,**kwargs)
 
             def recognize(self, frame, rule, stop):
-                if self.recovery_data() is None and rule.get('template') not in {
+                if self.recovery_data() is None and rule.get('template') not in ({
                         '游戏timeout提示.png','提示确认文字.png','重连登录标识.png','重连开始冒险.png',
                         '会话超时提示.png',
-                        '未完成地下城提示.png','未完成地下城好的.png'}:
+                        '未完成地下城提示.png','未完成地下城好的.png'} | NOTICE_TEMPLATES):
                     return None
                 if rule.get('food_collect'):
                     value = summarize_food(session.snapshot['data'].get('food_fields'))

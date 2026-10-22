@@ -4,6 +4,7 @@ import time
 from .action_guard import GuardedRunner as Runner
 from .cooldowns import DUNGEON_IDS
 from .list_guard import LIST_RULE
+from .confirmation import notification_rules
 
 
 def evidence(template, **kw):
@@ -85,7 +86,7 @@ def recovery_rules():
              roi=[620,365,160,90], threshold=.94, min_contrast_ratio=.85,
              min_brightness_ratio=.85, requires_match=copy.deepcopy(SESSION_EXPIRED),
              recovery_action='timeout'),
-    ]
+    ] + notification_rules()
 
 
 def add_resume_start(config):
@@ -208,7 +209,7 @@ class RecoveryRunner(Runner):
         match = self._hit(frame,rule)
         if match is None:
             return False
-        self.backend.recovery_click_allowed = rule.get('recovery_action') in ('timeout','login','unfinished')
+        self.backend.recovery_click_allowed = rule.get('recovery_action') in ('timeout','login','unfinished','welcome')
         try:
             self.backend.click(match,[0,0],self.stop_event,self.pause_event)
         finally:

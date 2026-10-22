@@ -23,7 +23,7 @@ LABELS = dict(navigate='定位禁域入口', navigation_wait='等待导航结果
               chest_return='确认返回探索', home='进入传送门', menu='进入禁域', map='选择黄金古国',
               detail='去探险', explore='探索', auto_off='开启自动战斗', auto_on='自动战斗已开启',
               chest_free='免费打开一个宝箱', chest_claimed='关闭已领取宝箱', xp='领取经验',
-              loot='领取战利品', unknown='未识别到支持的页面')
+              loot='领取战利品', welcome='确认欢迎归队通知', unknown='未识别到支持的页面')
 
 # Labels are stable recognition anchors; game input belongs to the icon/card
 # above them. Same normalized coordinate convention as dungeon name navigation.
@@ -87,8 +87,8 @@ class ForbiddenFlow:
         if self.phase == 'navigate':
             if kind == 'explore':
                 self.move('ready', now)
-            elif clickable and kind in ('home','menu','map','detail'):
-                self.expected = {'home':{'menu','map'}, 'menu':{'map','detail'},
+            elif clickable and kind in ('welcome','home','menu','map','detail'):
+                self.expected = {'welcome':{'home'}, 'home':{'menu','map'}, 'menu':{'map','detail'},
                                  'map':{'detail'}, 'detail':{'explore'}}[kind]
                 self.move('navigation_wait', now)
                 return kind
