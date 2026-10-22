@@ -9,6 +9,7 @@ from bk2.__main__ import main
 class BackgroundEntryTests(unittest.TestCase):
     def test_gui_uses_background_input_without_reading_dungeon_preference(self):
         app=Mock(worker=None,closing=False)
+        app.shutdown_blocked.return_value=False
         app.session.error=None
         app.capture.get.return_value='ScreenDC'
         panel=ForbiddenPanel.__new__(ForbiddenPanel)

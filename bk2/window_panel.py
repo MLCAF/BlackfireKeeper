@@ -50,6 +50,7 @@ class WindowPanel:
         self.choice.configure(state='disabled' if blocked else 'readonly')
         self.apply_button.configure(state='disabled' if blocked else 'normal')
     def apply(self):
+        if self.app.shutdown_blocked():return
         app=self.app
         if app.closing or (app.worker and app.worker.is_alive()) or (app.preparation_thread and app.preparation_thread.is_alive()):return
         size=CHOICES[self.value.get()]

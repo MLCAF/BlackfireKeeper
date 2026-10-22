@@ -1,14 +1,14 @@
 # 黑火守望（BlackfireKeeper）
 
-**[下载 Windows x64 便携 EXE 版 · v0.7.2（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.2/BlackfireKeeper-v0.7.2-windows-x64.zip)**
+**[下载 Windows x64 便携 EXE 版 · v0.8.0（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.0/BlackfireKeeper-v0.8.0-windows-x64.zip)**
 
-[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.7.2) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.7.2/BlackfireKeeper-v0.7.2-windows-x64.zip.sha256)
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.8.0) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.0/BlackfireKeeper-v0.8.0-windows-x64.zip.sha256)
 
 完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
 
-当前公开测试版：**黑火守望 v0.7.2**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v0.8.0**（首次公开测试版为 v0.1.0）。
 
-v0.7.2 修复“欢迎归队”通知挡住主界面，以及经验祝福确认按钮漏识别。已知通知统一核验标题、正文与按钮后确认，仍保留原识别阈值、后台点击和有界停止。见 [版本说明](RELEASE_v0.7.2.md)。
+v0.8.0 新增定时关机页：支持分钟倒计时和指定本机时间，到点停止挂机并提供 60 秒取消窗口；停止 / F8 或关闭脚本取消尚未提交的计划。每次打开主界面显示本次更新内容。见 [版本说明](RELEASE_v0.8.0.md)。
 
 ## 参考项目与致谢
 

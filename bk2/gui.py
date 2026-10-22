@@ -49,6 +49,8 @@ class App:
         self.forbidden_panel = ForbiddenPanel(self)
         from .window_panel import WindowPanel
         self.window_panel = WindowPanel(self)
+        from .shutdown_panel import ShutdownPanel
+        self.shutdown_panel = ShutdownPanel(self)
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.report_callback_exception = lambda typ, value, tb: self.report_error(value, tb)
         root.after(100, self.drain)
@@ -174,7 +176,13 @@ class App:
             self.diamond_hint.set('到期后在副本结束处处理' if ready else '距离下次可领取 · 内存读取')
         return fresh
 
+    def shutdown_blocked(self):
+        panel = getattr(self, 'shutdown_panel', None)
+        return bool(panel and panel.blocking)
+
     def connect(self):
+        if self.shutdown_blocked():
+            return
         if self.preparation_thread and self.preparation_thread.is_alive():
             self.emit('log', '正在核验游戏窗口尺寸，请稍候再连接')
             return
@@ -196,6 +204,8 @@ class App:
         self.status.set('正在连接并扫描内存…')
 
     def start_block_reason(self):
+        if self.shutdown_blocked():
+            return '请先取消定时关机倒计时，再启动任务'
         snapshot = self.last_snapshot
         if not snapshot or not 0 <= time.monotonic()-snapshot['captured_monotonic'] <= 3:
             return '请先连接游戏并等待有效内存状态'
@@ -208,6 +218,8 @@ class App:
         return None
 
     def start(self, dry_run):
+        if self.shutdown_blocked():
+            return
         if getattr(self, 'forbidden_panel', None) and self.forbidden_panel.selected():
             return self.forbidden_panel.start(dry_run)
         if self.worker and self.worker.is_alive():
@@ -245,7 +257,9 @@ class App:
         self.status.set('识别预览中，不点击' if dry_run else
                         ('挂机运行中，F8 停止' if selected else '仅领取模式运行中，F8 停止'))
 
-    def stop_run(self):
+    def stop_run(self, cancel_shutdown=True):
+        if cancel_shutdown and getattr(self, 'shutdown_panel', None):
+            self.shutdown_panel.cancel()
         if self.session:
             self.session.stop_automation('用户停止')
         else:
@@ -310,6 +324,7 @@ class App:
         self.refresh_dashboard()
 
     def drain(self):
+        self.shutdown_panel.refresh()
         for _ in range(200):
             try:
                 kind, data = self.events.get_nowait()
@@ -382,7 +397,7 @@ class App:
         busy = bool((self.worker and self.worker.is_alive()) or
                     (self.preparation_thread and self.preparation_thread.is_alive()))
         self.save_button.configure(state='disabled' if busy else 'normal')
-        self.connect_button.configure(state='disabled' if busy or self.closing else 'normal')
+        self.connect_button.configure(state='disabled' if busy or self.closing or self.shutdown_blocked() else 'normal')
         for widget in self.settings_widgets:
             if isinstance(widget, ttk.Combobox):
                 widget.configure(state='disabled' if busy else 'readonly')
@@ -395,8 +410,8 @@ class App:
         else:
             self.manual_button.pack_forget()
         fresh = self.refresh_dashboard()
-        self.forbidden_panel.refresh(fresh, busy)
-        self.window_panel.refresh(busy)
+        self.forbidden_panel.refresh(fresh, busy or self.shutdown_blocked())
+        self.window_panel.refresh(busy or self.shutdown_blocked())
         blocked = self.start_block_reason()
         for button in (self.preview_button, self.run_button):
             button.configure(state='normal' if fresh and not busy and not blocked else 'disabled')
@@ -416,6 +431,8 @@ class App:
 
     def close(self):
         self.closing = True
+        if getattr(self, 'shutdown_panel', None):
+            self.shutdown_panel.cancel()
         self.preparation_stop.set()
         if self.session:
             self.session.stop()
@@ -425,6 +442,10 @@ class App:
 def launch():
     root = tk.Tk()
     app = App(root)
+    from .update_notice import show_update_notice
+    show_update_notice(root)
+    if app.closing:
+        return
     app.preparation_thread = threading.Thread(target=app.prepare_startup, daemon=True)
     app.preparation_thread.start()
     root.mainloop()

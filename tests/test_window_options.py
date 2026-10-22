@@ -41,6 +41,7 @@ class ResolutionTests(unittest.TestCase):
             save_resolution(root,None);self.assertIsNone(load_resolution(root))
     def panel(self):
         app=Mock(worker=None,preparation_thread=None,closing=False)
+        app.shutdown_blocked.return_value=False
         app.preparation_stop=threading.Event()
         panel=WindowPanel.__new__(WindowPanel);panel.app=app;panel.value=Mock()
         panel.value.get.return_value='1600×826'

@@ -97,6 +97,7 @@ class ForbiddenPanel:
             radio.configure(state='normal' if supported and not busy and not self.app.closing else 'disabled')
 
     def start(self,dry_run):
+        if self.app.shutdown_blocked():return
         app=self.app
         if app.worker and app.worker.is_alive():
             return
