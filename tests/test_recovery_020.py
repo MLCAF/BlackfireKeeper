@@ -216,7 +216,11 @@ class RewardsOnlyTests(unittest.TestCase):
         config=boundary_profile();validate(config,ROOT/'assets/image',True)
         rules=config['states']['Boundary']['rules']
         clicks=[r for r in rules if r['action']=='click']
-        self.assertEqual(len(clicks),7)
+        self.assertEqual(len(clicks),8)
+        navigation=[r for r in clicks if r['template']=='地下城入口主体.png']
+        self.assertEqual({r['requires_match']['template'] for r in navigation},
+                         {'关卡导航选中.png','禁域导航选中.png'})
+        self.assertTrue(all(r['success_match']['template']==LIST_RULE['template'] for r in navigation))
         self.assertTrue(all(r['next']=='Boundary' for r in clicks))
         self.assertTrue(all(not r.get('increment_counter') for r in clicks))
         self.assertEqual({r['template'] for r in clicks},
@@ -275,6 +279,9 @@ class RewardsOnlyTests(unittest.TestCase):
         self.assertEqual(p,before)
     def test_rewards_only_runs_both_services_and_never_scans_or_reads_stamina(self):
         p=self.plan(); p['run_control']['mode']='rounds'
+        # This case explicitly tests both enabled services, independent of local defaults.
+        p['diamonds']['enabled']=True
+        p['food']['enabled']=True
         stop=threading.Event(); calls=[]; now=[1000.]
         def food():
             calls.append('food')

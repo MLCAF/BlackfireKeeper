@@ -52,6 +52,13 @@ def boundary_profile():
         success_match={k:copy.deepcopy(v) for k,v in LIST_RULE.items() if k != 'name'},
         retry_center_clicks=1, retry_max_clicks=2, retry_radius=0,
         confirm_frames=2, cooldown_seconds=1))
+    cleanup.append(dict(name='领取边界从禁域切回地下城',
+        **evidence('地下城入口主体.png', roi=[520,560,160,160]),
+        requires_match=evidence('禁域导航选中.png', roi=[620,560,160,160]),
+        action='click', next='Boundary', event='none', verify_change=True,
+        success_match={k:copy.deepcopy(v) for k,v in LIST_RULE.items() if k != 'name'},
+        retry_center_clicks=1, retry_max_clicks=2, retry_radius=0,
+        confirm_frames=2, cooldown_seconds=1))
     return dict(version=1,initial_state='Boundary',max_minutes=2,max_rounds=0,poll_seconds=.3,
         states={'Boundary':dict(timeout_seconds=30,rules=cleanup+[
             dict(rule,name='领取边界核验 / '+label,action='none',event='task_complete',confirm_frames=2)

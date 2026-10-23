@@ -1,0 +1,42 @@
+[
+  {
+    "template": "forbidden/claimed_1920.png",
+    "source_diagnostic": "20261023-133949-518559-24328db4",
+    "source_sha256": "5df71bd6a6e220a6a7f60c47836b395cbfc816c149a10213090368c0c7da275a",
+    "normalized_frame": [
+      1395,
+      720
+    ],
+    "physical_client": [
+      1920,
+      991
+    ],
+    "crop_xyxy": [
+      483,
+      458,
+      550,
+      488
+    ],
+    "sha256": "847fb1768b7f0a4dbb571762a6be5d5a46ea262c3b2e3ff01f2e171933cdeaae"
+  },
+  {
+    "template": "禁域导航选中.png",
+    "source_diagnostic": "20261023-135506-854768-c38a40db",
+    "source_sha256": "005b7ce472a0ed0189ec452f6aa6a00656b3264fd67d481d355aec8b80fe2581",
+    "normalized_frame": [
+      1395,
+      720
+    ],
+    "physical_client": [
+      1920,
+      991
+    ],
+    "crop_xyxy": [
+      641,
+      588,
+      756,
+      712
+    ],
+    "sha256": "69e237836a06afdefce4abec08df29e873c45bf945b47af58136b30cdaa17e62"
+  }
+]
