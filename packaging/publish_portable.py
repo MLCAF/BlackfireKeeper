@@ -1,5 +1,5 @@
 """Validate and publish a portable build from an immutable release tag."""
-import argparse,hashlib,io,json,os,re,subprocess,sys,urllib.request,zipfile
+import argparse,hashlib,io,json,os,re,subprocess,sys,time,urllib.request,zipfile
 from pathlib import Path
 
 ROOT=Path.cwd()
@@ -17,6 +17,26 @@ def api(path):
 
 def command(*args):
     return subprocess.check_output(args,text=True,encoding='utf8').strip()
+
+
+def release_record(required=False):
+    # Tag/list indexes can lag behind a draft creation or asset upload. Resolve
+    # the immutable release ID via gh, then fetch that exact resource afresh.
+    result=subprocess.run(['gh','release','view',TAG,'--repo',REPO,'--json','databaseId'],
+                          capture_output=True,text=True,encoding='utf8')
+    if result.returncode:
+        if not required and 'release not found' in result.stderr.lower():return None
+        raise RuntimeError('Release lookup failed: '+result.stderr.strip())
+    identity=json.loads(result.stdout)['databaseId']
+    return api(f'/repos/{REPO}/releases/{identity}?bkk_check={time.time_ns()}')
+
+
+def wait_release(predicate):
+    for attempt in range(6):
+        release=release_record(required=True)
+        if predicate(release):return release
+        if attempt<5:time.sleep(2)
+    raise RuntimeError('Release metadata did not settle; keep uploaded assets for audit')
 
 def verify_source():
     assert os.environ['GITHUB_REPOSITORY']==REPO
@@ -61,11 +81,8 @@ def audit():
 def publish():
     verify_source()
     path,checksum,evidence=audit()
-    releases=api('/repos/'+REPO+'/releases?per_page=100')
-    matches=[r for r in releases if r['tag_name']==TAG]
-    assert len(matches)<=1
-    if matches:
-        release=matches[0]
+    release=release_record()
+    if release is not None:
         assert release['draft'],'Refuse to alter published release'
         assert not release['assets'],'Refuse to overwrite existing assets'
     else:
@@ -74,7 +91,7 @@ def publish():
             '--prerelease='+str(not PRIVATE).lower()],check=True)
     verify_source()
     subprocess.run(['gh','release','upload',TAG,str(path),str(checksum),'--repo',REPO],check=True)
-    release=next(r for r in api('/repos/'+REPO+'/releases?per_page=100') if r['tag_name']==TAG)
+    release=wait_release(lambda r:len(r['assets'])==2)
     assert release['draft'] and len(release['assets'])==2
     for asset in release['assets']:
         local=ROOT/'dist'/asset['name']
@@ -83,7 +100,7 @@ def publish():
     verify_source()
     subprocess.run(['gh','release','edit',TAG,'--repo',REPO,'--draft=false',
         '--prerelease='+str(not PRIVATE).lower()],check=True)
-    release=api(f'/repos/{REPO}/releases/tags/{TAG}')
+    release=wait_release(lambda r:not r['draft'])
     assert not release['draft'] and release['prerelease'] is (not PRIVATE)
     evidence['url']=release['html_url']
     evidence['assets']=[{k:a[k] for k in ['name','size','digest','browser_download_url']} for a in release['assets']]

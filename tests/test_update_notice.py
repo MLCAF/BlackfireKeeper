@@ -11,7 +11,7 @@ class UpdateNoticeTests(unittest.TestCase):
             show_update_notice(parent);show_update_notice(parent)
         self.assertEqual(show.call_count,2)
         show.assert_called_with(f'{DISPLAY_NAME} · 本次更新',UPDATE_TEXT,parent=parent)
-        self.assertIn('60 秒',UPDATE_TEXT)
+        self.assertIn('Windows 系统任务',UPDATE_TEXT)
         self.assertIn('定时关机',UPDATE_TEXT)
 
     def test_gui_launch_shows_notice_before_window_preparation(self):

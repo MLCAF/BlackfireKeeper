@@ -176,13 +176,7 @@ class App:
             self.diamond_hint.set('到期后在副本结束处处理' if ready else '距离下次可领取 · 内存读取')
         return fresh
 
-    def shutdown_blocked(self):
-        panel = getattr(self, 'shutdown_panel', None)
-        return bool(panel and panel.blocking)
-
     def connect(self):
-        if self.shutdown_blocked():
-            return
         if self.preparation_thread and self.preparation_thread.is_alive():
             self.emit('log', '正在核验游戏窗口尺寸，请稍候再连接')
             return
@@ -204,8 +198,6 @@ class App:
         self.status.set('正在连接并扫描内存…')
 
     def start_block_reason(self):
-        if self.shutdown_blocked():
-            return '请先取消定时关机倒计时，再启动任务'
         snapshot = self.last_snapshot
         if not snapshot or not 0 <= time.monotonic()-snapshot['captured_monotonic'] <= 3:
             return '请先连接游戏并等待有效内存状态'
@@ -218,8 +210,6 @@ class App:
         return None
 
     def start(self, dry_run):
-        if self.shutdown_blocked():
-            return
         if getattr(self, 'forbidden_panel', None) and self.forbidden_panel.selected():
             return self.forbidden_panel.start(dry_run)
         if self.worker and self.worker.is_alive():
@@ -257,9 +247,7 @@ class App:
         self.status.set('识别预览中，不点击' if dry_run else
                         ('挂机运行中，F8 停止' if selected else '仅领取模式运行中，F8 停止'))
 
-    def stop_run(self, cancel_shutdown=True):
-        if cancel_shutdown and getattr(self, 'shutdown_panel', None):
-            self.shutdown_panel.cancel()
+    def stop_run(self):
         if self.session:
             self.session.stop_automation('用户停止')
         else:
@@ -397,7 +385,7 @@ class App:
         busy = bool((self.worker and self.worker.is_alive()) or
                     (self.preparation_thread and self.preparation_thread.is_alive()))
         self.save_button.configure(state='disabled' if busy else 'normal')
-        self.connect_button.configure(state='disabled' if busy or self.closing or self.shutdown_blocked() else 'normal')
+        self.connect_button.configure(state='disabled' if busy or self.closing else 'normal')
         for widget in self.settings_widgets:
             if isinstance(widget, ttk.Combobox):
                 widget.configure(state='disabled' if busy else 'readonly')
@@ -410,8 +398,8 @@ class App:
         else:
             self.manual_button.pack_forget()
         fresh = self.refresh_dashboard()
-        self.forbidden_panel.refresh(fresh, busy or self.shutdown_blocked())
-        self.window_panel.refresh(busy or self.shutdown_blocked())
+        self.forbidden_panel.refresh(fresh, busy)
+        self.window_panel.refresh(busy)
         blocked = self.start_block_reason()
         for button in (self.preview_button, self.run_button):
             button.configure(state='normal' if fresh and not busy and not blocked else 'disabled')
@@ -431,8 +419,6 @@ class App:
 
     def close(self):
         self.closing = True
-        if getattr(self, 'shutdown_panel', None):
-            self.shutdown_panel.cancel()
         self.preparation_stop.set()
         if self.session:
             self.session.stop()

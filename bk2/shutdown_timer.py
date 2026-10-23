@@ -1,21 +1,20 @@
-"""Session-only shutdown plan. Never schedule a persistent OS shutdown job."""
+"""Windows-owned shutdown task shared by both editions for the current user."""
+import base64
 import datetime as dt
-import math
+import json
 import os
 import re
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
 
 def deadline(mode, value, now):
     if mode == '延时（分钟）':
-        if not re.fullmatch(r'[0-9]+', value.strip()):
+        if not re.fullmatch(r'[0-9]+', value.strip()) or not 1 <= int(value) <= 10080:
             raise ValueError('分钟数须为 1～10080 的整数')
-        minutes = int(value)
-        if not 1 <= minutes <= 10080:
-            raise ValueError('分钟数须为 1～10080 的整数')
-        return now + minutes * 60
+        return now + int(value) * 60
     if mode != '指定时间（HH:MM）' or not re.fullmatch(r'([01][0-9]|2[0-3]):[0-5][0-9]', value.strip()):
         raise ValueError('时间须为 24 小时制 HH:MM，例如 23:30')
     hour, minute = map(int, value.split(':'))
@@ -25,72 +24,113 @@ def deadline(mode, value, now):
     return target.timestamp()
 
 
-def request_shutdown():
-    if os.name != 'nt':
-        raise RuntimeError('定时关机仅支持 Windows')
-    # /t > 0 implicitly forces applications closed. Keep countdown in our UI.
-    command = str(Path(os.environ['SystemRoot']) / 'System32' / 'shutdown.exe')
-    result = subprocess.run([command, '/s', '/t', '0'], capture_output=True,
-                            creationflags=subprocess.CREATE_NO_WINDOW, timeout=15)
-    if result.returncode:
-        detail = (result.stderr or result.stdout).decode(errors='replace').strip()
-        raise RuntimeError(f'Windows 未接受关机请求（{result.returncode}）：{detail}')
+# Parameters arrive as JSON on stdin, never interpolated into PowerShell code.
+TASK_SCRIPT = r'''
+$ErrorActionPreference = 'Stop'
+[Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+try {
+    $request = [Console]::In.ReadToEnd() | ConvertFrom-Json
+    $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    if ($request.owner_sid) {
+        if ($request.owner_sid -notmatch '^S-1-5-[0-9-]+$') { throw 'Invalid task owner.' }
+        $sid = $request.owner_sid
+    }
+    $name = 'BlackfireKeeper-Shutdown-' + $sid
+    $marker = 'BlackfireKeeper scheduled shutdown v1'
+    $exe = Join-Path $env:SystemRoot 'System32\shutdown.exe'
+    $task = $null
+    try { $task = Get-ScheduledTask -TaskName $name -ErrorAction Stop }
+    catch { if ($_.FullyQualifiedErrorId -notlike 'CmdletizationQuery_NotFound*') { throw } }
+    if ($task -and ($task.Description -ne $marker -or $task.Actions.Count -ne 1 -or
+        $task.Actions[0].Execute -ne $exe -or $task.Actions[0].Arguments -ne '/s /f /t 0')) {
+        throw 'Task name is occupied by an unrelated task; refusing to modify it.'
+    }
+    switch ($request.operation) {
+        'arm' {
+            $at = [datetime]::ParseExact($request.at, 'yyyy-MM-ddTHH:mm:ss', [cultureinfo]::InvariantCulture)
+            if ($at -le (Get-Date)) { throw 'The requested time has already passed.' }
+            $action = New-ScheduledTaskAction -Execute $exe -Argument '/s /f /t 0'
+            $trigger = New-ScheduledTaskTrigger -Once -At $at
+            $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun -ExecutionTimeLimit (New-TimeSpan -Minutes 1)
+            $principal = New-ScheduledTaskPrincipal -UserId $sid -LogonType Interactive -RunLevel Limited
+            $definition = New-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description $marker
+            $task = Register-ScheduledTask -TaskName $name -InputObject $definition -Force
+        }
+        'cancel' {
+            if ($task) { Unregister-ScheduledTask -TaskName $name -Confirm:$false }
+            $task = $null
+        }
+        'query' { }
+        default { throw 'Unsupported operation.' }
+    }
+    if ($task) {
+        $info = Get-ScheduledTaskInfo -TaskName $name
+        $at = [datetime]$task.Triggers[0].StartBoundary
+        @{ok=$true; registered=$true; at=$at.ToString('yyyy-MM-ddTHH:mm:ss'); state=[string]$task.State;
+          last_result=$info.LastTaskResult; name=$name} | ConvertTo-Json -Compress
+    } else { @{ok=$true; registered=$false; name=$name} | ConvertTo-Json -Compress }
+} catch {
+    @{ok=$false; error=$_.Exception.Message; owner_sid=$sid; code=$_.Exception.HResult} | ConvertTo-Json -Compress
+    exit 1
+}
+'''
 
 
-class ShutdownTimer:
-    def __init__(self, stop, idle, submit, clock=time.time, monotonic=time.monotonic):
-        self.stop, self.idle, self.submit = stop, idle, submit
-        self.clock, self.monotonic = clock, monotonic
-        self.state = 'off'
-        self.target = 0
-        self.grace = 0
-        self.message = '未启用定时关机'
+class WindowsShutdownSchedule:
+    def __init__(self, runner=None):
+        self.runner = runner or subprocess.run
 
-    @property
-    def blocking(self):
-        return self.state in ('grace', 'submitting', 'submitted')
+    def execute(self, operation, target=None):
+        if os.name != 'nt':
+            raise RuntimeError('定时关机仅支持 Windows')
+        request = {'operation': operation}
+        if operation == 'arm':
+            request['at'] = dt.datetime.fromtimestamp(target).strftime('%Y-%m-%dT%H:%M:%S')
+        exe = str(Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe')
+        encoded = base64.b64encode(TASK_SCRIPT.encode('utf-16le')).decode('ascii')
+        result = self.runner([exe, '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
+            input=json.dumps(request).encode('utf8'), capture_output=True,
+            creationflags=subprocess.CREATE_NO_WINDOW, timeout=30)
+        try:
+            data = json.loads(result.stdout.decode('utf-8-sig'))
+        except (ValueError, UnicodeError) as exc:
+            raise RuntimeError('Windows 定时任务未返回有效结果，请检查任务计划程序服务') from exc
+        denied = (data.get('code') == -2147024891 or
+                  any(word in str(data.get('error','')).lower() for word in ('denied','拒绝')))
+        if data.get('ok') is not True and denied and data.get('owner_sid') and operation in ('arm','cancel'):
+            request['owner_sid'] = data['owner_sid']
+            data = self.elevated(exe, request)
+            result.returncode = 0 if data.get('ok') else 1
+        if result.returncode or data.get('ok') is not True:
+            raise RuntimeError('Windows 定时任务失败：' + data.get('error', '未知错误'))
+        if operation == 'arm' and not data.get('registered'):
+            raise RuntimeError('Windows 未确认关机任务注册成功')
+        return data
+
+    def elevated(self, exe, request):
+        payload = base64.b64encode(json.dumps(request).encode('utf8')).decode('ascii')
+        source = TASK_SCRIPT.replace('[Console]::In.ReadToEnd()',
+            "[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"+payload+"'))")
+        source = source.replace('    exit 1', '    return')
+        quote = lambda s: "'" + str(s).replace("'", "''") + "'"
+        with tempfile.TemporaryDirectory(prefix='BKK-shutdown-') as folder:
+            result_path = Path(folder)/'result.json'
+            elevated = '$report = & {\n'+source+'\n}\n[IO.File]::WriteAllText('+quote(result_path)+', ($report -join "`n"), (New-Object Text.UTF8Encoding($false)))'
+            code = base64.b64encode(elevated.encode('utf-16le')).decode('ascii')
+            launcher = '$ErrorActionPreference="Stop"; Start-Process -FilePath '+quote(exe)+" -ArgumentList '-NoProfile','-NonInteractive','-EncodedCommand',"+quote(code)+' -Verb RunAs -WindowStyle Hidden -Wait'
+            result = self.runner([exe,'-NoProfile','-NonInteractive','-EncodedCommand',
+                base64.b64encode(launcher.encode('utf-16le')).decode('ascii')],
+                capture_output=True,creationflags=subprocess.CREATE_NO_WINDOW,timeout=120)
+            if result.returncode or not result_path.is_file():
+                raise RuntimeError('管理员授权未完成，系统关机任务未确认；请重试并允许 Windows 授权提示')
+            return json.loads(result_path.read_text(encoding='utf-8-sig'))
 
     def arm(self, mode, value):
-        if self.state in ('grace', 'submitting', 'submitted'):
-            raise ValueError('请先取消现有倒计时；已提交的请求不能由本界面撤销')
-        target = deadline(mode, value, self.clock())
-        self.target, self.state = target, 'armed'
-        self.tick()
+        return self.execute('arm', deadline(mode, value, time.time()))
 
     def cancel(self):
-        if self.state not in ('armed', 'grace'):
-            return False
-        self.state, self.message = 'off', '定时关机已取消'
-        return True
+        return self.execute('cancel')
 
-    def fail(self, error):
-        self.state, self.message = 'failed', f'定时关机已停止：{error}'
-
-    def tick(self):
-        try:
-            if self.state == 'armed':
-                left = math.ceil(self.target - self.clock())
-                if left > 0:
-                    when = dt.datetime.fromtimestamp(self.target).strftime('%m-%d %H:%M:%S')
-                    self.message = f'{when} 停止挂机 · 剩余 {left//3600:02}:{left//60%60:02}:{left%60:02}'
-                else:
-                    self.state, self.grace = 'grace', self.monotonic() + 60
-                    self.stop()
-            if self.state == 'grace':
-                left = max(0, math.ceil(self.grace - self.monotonic()))
-                self.message = f'{left} 秒后请求关机 · 可点击取消或按 F8'
-                if left == 0:
-                    if not self.idle():
-                        raise RuntimeError('挂机或窗口操作尚未退出，不执行关机；请检查运行日志')
-                    self.state, self.message = 'submitting', '正在向 Windows 提交关机请求…'
-                    self.submit()
-        except Exception as exc:
-            self.fail(exc)
-
-    def submitted(self, error=None):
-        if self.state != 'submitting':
-            return
-        if error:
-            self.fail(error)
-        else:
-            self.state, self.message = 'submitted', 'Windows 已接受关机请求；未保存的应用可能阻止关机'
+    def query(self):
+        return self.execute('query')

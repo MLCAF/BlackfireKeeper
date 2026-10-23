@@ -24,6 +24,7 @@ class CaptureRecoveryTests(unittest.TestCase):
         b=DiagnosticBackend.__new__(DiagnosticBackend)
         b.recognition_trace=[];b.last_image=None;b.last_capture=0;b.last_shape=(720,1396)
         b.capture_method='FramePool';b.input_method='PostMessage';b.guard=Mock();b.emit=Mock()
+        b.capture_reconnects=1  # This fixture isolates the bounded frame-wait stage.
         b.controller=Mock();b.wait=Mock()
         b.controller.post_screencap.side_effect=[Mock(succeeded=True,get=Mock(return_value=f)) for f in frames]
         return b

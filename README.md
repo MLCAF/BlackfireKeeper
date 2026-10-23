@@ -1,14 +1,14 @@
 # 黑火守望（BlackfireKeeper）
 
-**[下载 Windows x64 便携 EXE 版 · v0.8.0（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.0/BlackfireKeeper-v0.8.0-windows-x64.zip)**
+**[下载 Windows x64 便携 EXE 版 · v0.8.1（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.1/BlackfireKeeper-v0.8.1-windows-x64.zip)**
 
-[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.8.0) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.0/BlackfireKeeper-v0.8.0-windows-x64.zip.sha256)
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.8.1) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.1/BlackfireKeeper-v0.8.1-windows-x64.zip.sha256)
 
 完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
 
-当前公开测试版：**黑火守望 v0.8.0**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v0.8.1**（首次公开测试版为 v0.1.0）。
 
-v0.8.0 新增定时关机页：支持分钟倒计时和指定本机时间，到点停止挂机并提供 60 秒取消窗口；停止 / F8 或关闭脚本取消尚未提交的计划。每次打开主界面显示本次更新内容。见 [版本说明](RELEASE_v0.8.0.md)。
+v0.8.1 定时关机改为 Windows 系统任务：报错、停止 / F8、关闭或崩溃均不取消计划，到点直接关机；仅手动取消撤销。修复持续黑屏后截图连接未重建，以及已完整通关返回列表却误报停止。启动更新说明每次显示。见 [版本说明](RELEASE_v0.8.1.md)。
 
 ## 参考项目与致谢
 

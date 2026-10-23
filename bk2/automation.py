@@ -448,6 +448,15 @@ def run_plan(session, plan=None, dry_run=False, capture='FramePool', input_metho
                         and after['count'] > before['count']
                         and after.get('start_time',0) > before.get('start_time',0))
 
+            def verified_dungeon_return(self, expected):
+                data = self.recovery_data()
+                if data is None or self.required_completion is None:return False
+                progress = data.get('dungeon_progress') or {}
+                verified = session.ledger.last_verified_completion or {}
+                return (progress.get('dungeon_id') == expected and progress.get('result') == 'finished'
+                        and verified.get('dungeon_id') == expected
+                        and verified.get('count', 0) >= self.required_completion)
+
             def guard(self):
                 super().guard()
                 if session.stop_event.is_set() or session.operation_stop.is_set():

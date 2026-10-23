@@ -134,6 +134,15 @@ class RecoveryRunner(Runner):
         return super().record(event, **details)
 
     def pending_success(self, image):
+        verifier = getattr(self.backend, 'verified_dungeon_return', None)
+        expected = self.config.get('expected_dungeon_id')
+        if (self.round_armed and expected and self.stats.state in gameplay_states(self.config)
+                and 'ReturnEntry' in self.config['states'] and callable(verifier)
+                and verifier(expected) is True):
+            rule = dict(LIST_RULE, name='内存已核验完整通关，接续返回确认',
+                        action='none', event='none', next='ReturnEntry', confirm_frames=3)
+            match = self._hit(image, rule)
+            if match:return rule, match
         # Some completed dungeons return to the world tab. Only a pending
         # completion click from this armed round authorizes returning to the
         # dungeon list; seeing a world page alone must never count a completion.

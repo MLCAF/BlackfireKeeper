@@ -8,6 +8,10 @@ from .version import version_info
 from .scene_variants import SceneVariantMixin
 
 
+class CaptureRecoveryTimeout(RuntimeError):
+    pass
+
+
 class DiagnosticBackend(SceneVariantMixin, MaaBackend):
     CAPTURE_RECOVERY_SECONDS = 6.0
     CAPTURE_MAX_ATTEMPTS = 30
@@ -77,9 +81,42 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
             self._previous_recognition = copy.deepcopy(self.recognition_trace)
             self._previous_image = self.last_image.copy()
             self._previous_capture = self.last_capture
-        return self._capture_valid(stop)
+        try:
+            return self._capture_valid(stop)
+        except CaptureRecoveryTimeout:
+            if self.capture_method != 'FramePool' or getattr(self, 'capture_reconnects', 0) >= 1:
+                raise
+            first = copy.deepcopy(self.capture_health)
+            self.capture_reconnects = 1
+            self.last_shape, self.last_capture = None, 0
+            getattr(self, 'emit', lambda *args: None)('log',
+                'FramePool 持续黑屏，暂停点击并重建截图连接一次；仍需连续两帧有效画面')
+            try:
+                self.reconnect_capture(stop)
+                return self._capture_valid(stop, require_pair=True)
+            finally:
+                self.capture_health.update(reconnects=1, initial_failure=first)
 
-    def _capture_valid(self, stop):
+    def reconnect_capture(self, stop):
+        from maa.controller import Win32Controller
+        from maa.define import MaaWin32ScreencapMethodEnum, MaaWin32InputMethodEnum
+        if stop.is_set():raise InterruptedError('截图重连已停止')
+        self.guard()
+        controller = Win32Controller(self.window.hwnd,
+            screencap_method=getattr(MaaWin32ScreencapMethodEnum, self.capture_method),
+            mouse_method=getattr(MaaWin32InputMethodEnum, self.input_method),
+            keyboard_method=getattr(MaaWin32InputMethodEnum, self.input_method))
+        job = controller.post_connection()
+        self.wait(job, stop, timeout=3)
+        self.guard()
+        if not job.succeeded or not controller.set_screenshot_target_short_side(720):
+            raise RuntimeError('截图连接重建失败，停止操作')
+        if stop.is_set():raise InterruptedError('截图重连已停止')
+        if not self.tasker.bind(self.resource, controller):
+            raise RuntimeError('截图连接重新绑定失败，停止操作')
+        self.controller = controller
+
+    def _capture_valid(self, stop, require_pair=False):
         started = time.monotonic()
         deadline = started + self.CAPTURE_RECOVERY_SECONDS
         health = self.capture_health = dict(attempts=0, rejected_frames=0,
@@ -118,7 +155,7 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
                         '截图出现纯色画面，暂停点击并等待恢复（最多 6 秒；连续两帧有效后继续）')
             else:
                 health['consecutive_valid'] += 1
-                if health['consecutive_valid'] >= (2 if health['rejected_frames'] else 1):
+                if health['consecutive_valid'] >= (2 if health['rejected_frames'] or require_pair else 1):
                     if time.monotonic() >= deadline:
                         break
                     health['status'] = 'recovered' if health['rejected_frames'] else 'valid'
@@ -132,7 +169,7 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
                 raise InterruptedError('截图等待已停止')
         health['status'] = 'timed_out'
         health['elapsed_seconds'] = round(time.monotonic()-started, 4)
-        raise RuntimeError('截图恢复超时：6 秒内未取得连续有效画面，停止而非继续点击')
+        raise CaptureRecoveryTimeout('截图恢复超时：6 秒内未取得连续有效画面，停止而非继续点击')
 
     def save_diagnostic(self, state, reason, config):
         from PIL import Image

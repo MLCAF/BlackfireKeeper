@@ -165,6 +165,8 @@ class ProgressLedger:
         self.previous = None
         self.active_id = None
         self.finished_transitions = 0
+        self.previous_route_size = None
+        self.last_verified_completion = None
 
     def observe(self, snapshot):
         d = snapshot['data'].get('dungeon_progress') or {}
@@ -175,8 +177,18 @@ class ProgressLedger:
         if (current[1] == 'finished' and self.previous == (current[0], 'in progress')
                 and current[0] == self.active_id):
             self.finished_transitions += 1
+            if (self.previous_route_size is not None
+                    and d.get('current_room_index') == self.previous_route_size):
+                self.last_verified_completion = dict(dungeon_id=current[0], count=self.finished_transitions)
             event = {'event': 'dungeon_finished_transition', 'dungeon_id': current[0],
                      'count': self.finished_transitions, 'inventory_credit_verified': False}
             self.active_id = None
         self.previous = current
+        rooms = d.get('rooms')
+        self.previous_route_size = None
+        if current[1] == 'in progress' and isinstance(rooms, list) and rooms:
+            battles = [r.get('data', {}) for r in rooms if r.get('id') == 'battle']
+            if (battles and all(b.get('has_finished') is True for b in battles)
+                    and d.get('current_room_index') == len(rooms)-1):
+                self.previous_route_size = len(rooms)
         return event
