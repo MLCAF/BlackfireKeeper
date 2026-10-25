@@ -79,7 +79,7 @@ class FlowTests(unittest.TestCase):
 
     def test_unknown_start_chest_and_other_battle_are_not_adopted(self):
         f=ForbiddenFlow(ForbiddenOptions(),0)
-        for kind in ('chest_free','chest_claimed','auto_off','xp','loot'):
+        for kind in ('chest_free','chest_claimed','auto_off'):
             self.assertIsNone(f.step(kind,True,320,1))
         with self.assertRaises(TimeoutError):f.check_time(46)
 

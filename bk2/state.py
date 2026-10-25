@@ -116,7 +116,7 @@ class StateReader:
         raise MemoryReadError('状态连续读取不一致或对象失效，请重新连接')
 
 
-def bind_when_ready(reader, stop, emit, seconds=30, clock=time.monotonic):
+def bind_when_ready(reader, stop, emit, seconds=60, clock=time.monotonic):
     """Wait for login data, still requiring a unique verified PlayerData owner."""
     deadline = clock() + seconds
     attempts = 0
@@ -142,12 +142,13 @@ def bind_when_ready(reader, stop, emit, seconds=30, clock=time.monotonic):
             if reader.binding_diagnostics.get('structural_candidates') != 0:
                 raise
             if attempts == 1:
-                emit('log', '玩家数据尚未就绪，最多等待 30 秒；请保持游戏已登录，不执行点击')
+                emit('log', f'玩家数据尚未就绪，最多等待 {seconds:g} 秒；请保持游戏已登录，不执行点击')
             stop.wait(.5)
     reader.binding_diagnostics['startup_attempts'] = attempts
     if stop.is_set():
         raise InterruptedError('玩家绑定已取消')
-    raise MemoryReadError('等待玩家数据超时：' + last_error)
+    stage = reader.binding_diagnostics.get('stage', 'unknown')
+    raise MemoryReadError(f'等待玩家数据超时（{seconds:g} 秒，阶段 {stage}）：' + last_error)
 
 
 def require_fresh(snapshot, pid, now=None):

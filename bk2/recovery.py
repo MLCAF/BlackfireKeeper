@@ -59,8 +59,20 @@ def boundary_profile():
         success_match={k:copy.deepcopy(v) for k,v in LIST_RULE.items() if k != 'name'},
         retry_center_clicks=1, retry_max_clicks=2, retry_radius=0,
         confirm_frames=2, cooldown_seconds=1))
+    # A user can enter a battle while the scheduler waits for cooldowns.
+    # Recognize that takeover explicitly; do not treat cached dungeon memory
+    # as proof that the current screen is a safe collection boundary.
+    from .forbidden_vision import RULES
+    occupied = [dict(copy.deepcopy(RULES[k]), name='领取等待期间检测到战斗 / '+k,
+                     action='stop', confirm_frames=2,
+                     stop_message='已停止领取调度；请结束当前战斗并回到主城或地下城列表后重新开始')
+                for k in ('auto_on', 'auto_off')]
+    occupied.append(dict(copy.deepcopy(RULES['explore']), name='领取等待期间进入禁域',
+                         requires_match={k:copy.deepcopy(v) for k,v in RULES['gold_header'].items() if k!='name'},
+                         action='stop', confirm_frames=2,
+                         stop_message='已停止领取调度；禁域请使用禁域挂机，或返回主城后重新开始'))
     return dict(version=1,initial_state='Boundary',max_minutes=2,max_rounds=0,poll_seconds=.3,
-        states={'Boundary':dict(timeout_seconds=30,rules=cleanup+[
+        states={'Boundary':dict(timeout_seconds=30,rules=occupied+cleanup+[
             dict(rule,name='领取边界核验 / '+label,action='none',event='task_complete',confirm_frames=2)
             for label,rule in [('主城',HOME),('地下城列表',LIST_RULE)]])})
 

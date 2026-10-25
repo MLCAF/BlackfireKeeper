@@ -16,6 +16,32 @@ class DiagnosticBackend(SceneVariantMixin, MaaBackend):
     CAPTURE_RECOVERY_SECONDS = 6.0
     CAPTURE_MAX_ATTEMPTS = 30
 
+    @property
+    def click_hold_seconds(self):
+        # PostMessage's immediate down/up can fall in the same game frame.
+        # Use the already-tested held-click path without changing user input mode.
+        return .15 if self.input_method in ('PostMessage', 'SendMessage') else 0.
+
+    def recognize(self, image, rule, stop):
+        if image is getattr(self, '_timed_out_image', None):
+            return None
+        try:
+            return super().recognize(image, rule, stop)
+        except TimeoutError:
+            # Only recognition is retried. A timed-out click is never replayed.
+            self.last_shape, self.last_capture = None, 0
+            self._timed_out_image = image
+            if getattr(self, 'recognition_restarts', 0) >= 1:
+                raise
+            self.recognition_restarts = 1
+            cancelled = self.cancel()
+            self.wait(cancelled, stop, timeout=3)
+            if not cancelled.succeeded:
+                raise RuntimeError('超时识别任务未确认停止，拒绝继续识别或点击')
+            getattr(self, 'emit', lambda *args: None)('log',
+                '识别任务超时，已停止旧任务并丢弃旧帧；重新截图后复核一次，不重复发送点击')
+            return None
+
     def __init__(self, root, window, capture_method='FramePool', input_method='Seize', preparation_stop=None):
         from vendor_core.windows import Windows
         from .window_geometry import Geometry, standardize

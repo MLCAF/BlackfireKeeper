@@ -24,6 +24,7 @@ LABELS = dict(navigate='定位禁域入口', navigation_wait='等待导航结果
               detail='去探险', explore='探索', auto_off='开启自动战斗', auto_on='自动战斗已开启',
               chest_free='免费打开一个宝箱', chest_claimed='关闭已领取宝箱', xp='领取经验',
               loot='领取战利品', welcome='确认欢迎归队通知', unknown='未识别到支持的页面')
+LABELS.update(resume_xp='接续遗留经验奖励', resume_loot='确认遗留奖励返回探索')
 
 # Labels are stable recognition anchors; game input belongs to the icon/card
 # above them. Same normalized coordinate convention as dungeon name navigation.
@@ -66,6 +67,8 @@ class ForbiddenFlow:
         self.done = False
         self.expected = set()
         self.auto_submitted = False
+        self.auto_attempts = 0
+        self.auto_last_submit = 0.
 
     def move(self, phase, now, seconds=30):
         self.phase, self.deadline = phase, now+seconds
@@ -87,6 +90,11 @@ class ForbiddenFlow:
         if self.phase == 'navigate':
             if kind == 'explore':
                 self.move('ready', now)
+            elif kind in ('xp', 'loot') and clickable:
+                # An interrupted run can leave a foreground reward panel.
+                # Claim only that verified panel; do not credit a new round.
+                self.move('resume_xp' if kind == 'xp' else 'resume_loot', now)
+                return kind
             elif clickable and kind in ('welcome','home','menu','map','detail'):
                 self.expected = {'welcome':{'home'}, 'home':{'menu','map'}, 'menu':{'map','detail'},
                                  'map':{'detail'}, 'detail':{'explore'}}[kind]
@@ -95,6 +103,12 @@ class ForbiddenFlow:
             else:
                 # Starting inside a battle or chest modal lacks map ownership.
                 return None
+        if self.phase == 'resume_xp' and kind == 'loot' and clickable:
+            self.move('resume_loot', now)
+            return 'loot'
+        if self.phase == 'resume_loot' and kind == 'explore':
+            self.move('ready', now)
+            return None
         if self.phase == 'ready' and kind == 'explore' and clickable:
             if self.completed >= self.options.rounds:
                 self.done, self.reason = True, '已完成设定的禁域探索次数'
@@ -105,6 +119,7 @@ class ForbiddenFlow:
                 self.done, self.reason = True, '体力低于禁域下限，已停止探索'
                 return None
             self.auto_submitted = False
+            self.auto_attempts = 0
             self.move('encounter', now, 60)
             return 'explore'
         if self.phase in ('encounter','battle','auto_wait'):
@@ -113,7 +128,16 @@ class ForbiddenFlow:
                     self.move('battle', now, 180)
                 if kind == 'auto_off' and clickable and not self.auto_submitted:
                     self.auto_submitted = True
+                    self.auto_attempts += 1
+                    self.auto_last_submit = now
                     self.move('auto_wait', now, 20)
+                    return 'auto_off'
+                if (kind == 'auto_off' and clickable and self.phase == 'auto_wait'
+                        and self.auto_attempts < 3 and now-self.auto_last_submit >= 4):
+                    # Only a positively re-observed OFF icon permits another
+                    # attempt. Never reset the deadline or toggle an ON icon.
+                    self.auto_attempts += 1
+                    self.auto_last_submit = now
                     return 'auto_off'
                 if kind == 'auto_on' and self.phase == 'auto_wait':
                     self.move('battle', now, 180)
@@ -186,6 +210,15 @@ class ForbiddenRunner:
                         break
                     action = self.flow.step(kind, match is not None, self.read_stamina(), self.clock())
                     if action:
+                        if action == 'auto_off':
+                            # The toggle can change after the two-frame vote.
+                            # Recheck on another fresh capture immediately before input.
+                            frame = self.backend.capture(self.stop_event)
+                            self.emit('image', frame)
+                            fresh_kind, match = vision.observe(frame)
+                            if fresh_kind != 'auto_off' or match is None:
+                                stable, previous = 0, None
+                                continue
                         # Classification and context were both rechecked on this
                         # capture, and the backend rechecks age/identity at input.
                         self.emit('log', f'禁域：{LABELS[action]}，等待确认下一页面')

@@ -11,8 +11,9 @@ RULES = {
     'claimed': rule('claimed', [70,400,1250,130]),
     'close': rule('close', [700,120,680,200]),
     'xp_title': rule('xp_title', [500,155,400,95]),
-    'loot_title': rule('loot_title', [500,155,400,95]),
-    'continue': rule('continue', [450,430,500,100]),
+    # One/two/three reward rows move both the title and the Continue button.
+    'loot_title': rule('loot_title', [500,70,400,190]),
+    'continue': rule('continue', [450,430,500,240]),
     'auto_off': rule('auto_off', [1000,0,180,110]),
     'auto_on': rule('auto_on', [1000,0,180,110]),
     'gold_header': rule('gold_header', [550,15,300,85]),

@@ -138,9 +138,9 @@ class Session:
                     try:
                         current = reader.snapshot()
                     except MemoryReadError:
-                        if (self.runner is None and not self.automation_active) or self.operation_stop.is_set():
-                            raise
-                        current = self.rebind_after_disconnect(reader)
+                        passive = ((self.runner is None and not self.automation_active)
+                                   or self.operation_stop.is_set())
+                        current = self.rebind_after_disconnect(reader, passive=passive)
         except Exception as exc:
             if isinstance(exc, InterruptedError) and (self.stop_event.is_set() or self.operation_stop.is_set()):
                 # Cancellation during a bounded bind is not a memory fault.
@@ -157,31 +157,40 @@ class Session:
         finally:
             self.ready.set()
 
-    def rebind_after_disconnect(self, reader):
-        self.memory_recovery_until = time.monotonic()+60
+    def rebind_after_disconnect(self, reader, passive=False):
+        deadline = time.monotonic()+60
+        # Idle rebind is read-only: it must not enable gameplay recovery clicks
+        # or clear the user's Stop flag.
+        self.memory_recovery_until = 0. if passive else deadline
         self.snapshot = {'status':'unknown','error':'断线恢复中，暂停普通操作'}
-        self.publish('log','玩家字典暂时失效：60 秒内尝试重新绑定；仅允许已识别的登录恢复按钮')
+        self.publish('log', '玩家字典暂时失效：60 秒内只读重新绑定，不恢复挂机或点击游戏' if passive
+                     else '玩家字典暂时失效：60 秒内尝试重新绑定；仅允许已识别的登录恢复按钮')
         session = self
         class RecoveryStop:
             def is_set(self):
-                return (session.stop_event.is_set() or session.operation_stop.is_set()
-                        or time.monotonic() >= session.memory_recovery_until)
+                return (session.stop_event.is_set() or (not passive and session.operation_stop.is_set())
+                        or time.monotonic() >= deadline)
         try:
-            while time.monotonic() < self.memory_recovery_until:
-                if self.stop_event.is_set() or self.operation_stop.is_set():
+            while time.monotonic() < deadline:
+                if self.stop_event.is_set() or (not passive and self.operation_stop.is_set()):
                     raise InterruptedError('内存重连已停止')
                 try:
                     current = reader.bind(RecoveryStop())
-                    if time.monotonic() >= self.memory_recovery_until:
+                    if time.monotonic() >= deadline:
                         raise MemoryReadError('内存重新绑定超时')
                     require_fresh(current,current['pid'])
                     if self.last_valid_snapshot and current['pid'] != self.last_valid_snapshot['pid']:
                         raise MemoryReadError('重连进程身份不一致')
+                    if (self.last_valid_snapshot and current.get('process_creation')
+                            != self.last_valid_snapshot.get('process_creation')):
+                        raise MemoryReadError('重连进程创建时间不一致')
                     self.snapshot = current
-                    self.publish('log','玩家字典已重新绑定，恢复普通状态核验')
+                    self.publish('log', '玩家字典已只读重新绑定；挂机保持原停止状态' if passive
+                                 else '玩家字典已重新绑定，恢复普通状态核验')
                     return current
                 except MemoryReadError:
-                    if self.operation_stop.wait(.5): raise InterruptedError('内存重连已停止')
+                    cancel = self.stop_event if passive else self.operation_stop
+                    if cancel.wait(.5): raise InterruptedError('内存重连已停止')
             raise MemoryReadError('60 秒内无法重新绑定唯一玩家字典')
         finally:
             self.memory_recovery_until = 0.
