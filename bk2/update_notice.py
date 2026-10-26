@@ -2,7 +2,7 @@
 from tkinter import messagebox
 from .version import DISPLAY_NAME
 
-UPDATE_TEXT = '''v1.0.0 本次更新：
+UPDATE_TEXT = '''v1.0.1 本次更新：
 
 1. 新增七至十本入口：兽人地堡、巨龙巢穴、古老墓穴、地狱深渊。八至十本默认不勾选，保留已有设置和冷却记录。
 2. 修复禁域经验/战利品页面点击后未跳转便一直等待的问题：仅在重新确认同一奖励页面后重试，每个奖励页面最多点击 3 次，间隔至少 4 秒。

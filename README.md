@@ -1,14 +1,14 @@
 # 黑火守望（BlackfireKeeper）
 
-**[下载 Windows x64 便携 EXE 版 · v1.0.0（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.0/BlackfireKeeper-v1.0.0-windows-x64.zip)**
+**[下载 Windows x64 便携 EXE 版 · v1.0.1（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.1/BlackfireKeeper-v1.0.1-windows-x64.zip)**
 
-[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v1.0.0) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.0/BlackfireKeeper-v1.0.0-windows-x64.zip.sha256)
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v1.0.1) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.1/BlackfireKeeper-v1.0.1-windows-x64.zip.sha256)
 
 完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
 
-当前公开测试版：**黑火守望 v1.0.0**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v1.0.1**（首次公开测试版为 v0.1.0）。
 
-v1.0.0 新增七至十本入口和冷却识别，修复禁域经验／战利品结算等待超时，并说明如何从界面打开诊断目录和上传完整 ZIP。七本已由用户验证完整流程；八至十本已通过截图回放，完整战斗仍待用户验证。版本号按用户要求进入 v1 系列，验证范围以 [版本说明](RELEASE_v1.0.0.md) 为准。
+v1.0.1 新增七至十本入口和冷却识别，修复禁域经验／战利品结算等待超时，并说明如何从界面打开诊断目录和上传完整 ZIP。七本已由用户验证完整流程；八至十本已通过截图回放，完整战斗仍待用户验证。版本号按用户要求进入 v1 系列，验证范围以 [版本说明](RELEASE_v1.0.1.md) 为准。
 
 ## 参考项目与致谢
 
@@ -59,7 +59,7 @@ v0.3.1 修复楼梯点击引出的“未获得的祝福／技能卡”确认框�
 
 ## 功能
 
-- **地下城轮换**：从左向右识别一本至六本，新开副本只刷勾选项；启动时已有未完成副本则先接续当前一轮，每个副本独立选择经验或伤害 Buff；冷却期间等待。
+- **地下城轮换**：从左向右识别一本至十本，新开副本只刷勾选项；启动时已有未完成副本则先接续当前一轮，每个副本独立选择经验或伤害 Buff；冷却期间等待。
 - **仅领取模式**：可以一个副本也不勾选，按开关执行免费钻石与体力领取，不新开副本。
 - **断线与列表恢复**：timeout 后识别登录和未完成副本提示，内存与画面核验后继续；列表无目标且无已知名称时先点击地下城、连续拖回最左端重新识别。
 - **体力管理**：实时显示体力、制作进度及可领取数量。UI 可设置等待阈值（5–320）；低于阈值不进入新副本，补充后自动继续。
@@ -69,7 +69,7 @@ v0.3.1 修复楼梯点击引出的“未获得的祝福／技能卡”确认框�
 - **桌面 UI**：连接、选本、Buff、体力阈值、日志、统计和诊断入口。F8 停止输入，内存监视保留。
 - **错误诊断**：状态超时、有限重试、后继页面确认、输入互斥锁，以及自动保存的 JSON 报告和故障截图。
 
-代码不写游戏内存，不修改冷却时间。七本暂缺入口模板，保持不可选。
+代码不写游戏内存，不修改冷却时间。七至十本入口模板已加入；八至十本默认不勾选，完整战斗流程仍待用户验证。
 
 ## 安装
 
@@ -132,7 +132,7 @@ $env:BLACKFIRE_EXE = 'D:\Games\Blackfire Crusade\Blackfire Crusade.exe'
 .\.venv\Scripts\python.exe -X utf8 -m bk2 --version
 ```
 
-版本递增约定：`v0.1.1` 一类补丁号用于修复识别失败、卡住等问题；`v0.2.0` 一类次版本用于新增功能；核心功能和安装流程达到稳定发布标准后再使用 `v1.0.0`。每次发布更新版本定义，Git 标签与代码版本一致，已经发布的标签不覆盖。CI 会检查标签与代码是否一致。当前仍为公开测试版，版本号不代表全部游戏场景都已验证。
+版本递增约定：`v0.1.1` 一类补丁号用于修复识别失败、卡住等问题；`v0.2.0` 一类次版本用于新增功能；核心功能和安装流程达到稳定发布标准后再使用 `v1.0.1`。每次发布更新版本定义，Git 标签与代码版本一致，已经发布的标签不覆盖。CI 会检查标签与代码是否一致。当前仍为公开测试版，版本号不代表全部游戏场景都已验证。
 
 当前内存布局仅核验过 SHA-256 为下列值的游戏 EXE：
 
