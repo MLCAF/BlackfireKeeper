@@ -153,9 +153,9 @@ def validate_plan(data, profiles_root, image_root, check_files=False):
             raise ValueError('副本 id 不得为空或重复')
         ids.add(task['id'])
         selected_buff(task)
-        rank = number(task.get('order'), 'order', 1, 7)
+        rank = number(task.get('order'), 'order', 1, 10)
         if int(rank) != rank or rank in orders:
-            raise ValueError('副本顺序必须为不重复的 1 到 7 整数')
+            raise ValueError('副本顺序必须为不重复的 1 到 10 整数')
         orders.add(rank)
         if not isinstance(task.get('display_name'), str) or not task['display_name']:
             raise ValueError('副本名称不能为空')

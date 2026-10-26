@@ -1,0 +1,7 @@
+{
+  "vendor_core/unified.py": {
+    "base_sha256": "c232f38730ddbc2bd34cb6b2194a296d91ba47cf3335f1521a17b86c98ae77cb",
+    "patched_sha256": "76700422756e975d684fc24d610d138bec00d9cf0deb9dfdc9912a0ee5671b88",
+    "reason": "Extend validated unique integer dungeon orders from 1-7 to 1-10; other validation unchanged"
+  }
+}

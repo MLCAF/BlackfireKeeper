@@ -10,7 +10,7 @@ from .state import require_fresh
 from vendor_core.unified import UnifiedScheduler, ScheduleStore
 from .profiles import build_dungeon_profile
 from vendor_core.config import validate
-from .plan import validate_dungeon_plan
+from .plan import validate_dungeon_plan, with_bundled_entrances
 from .recovery import RecoveryRunner as Runner
 from .battle import BattleRunner
 from vendor_core.diamonds import DiamondResult
@@ -49,7 +49,7 @@ def load_plan(path=None):
     probe = boundary_profile()
     probe['interrupts'] = recovery_rules()
     validate(probe, ROOT / 'assets/image', True)
-    plan = validate_food_options(validate_dungeon_plan(json.loads(path.read_text(encoding='utf-8-sig')),
+    plan = validate_food_options(validate_dungeon_plan(with_bundled_entrances(json.loads(path.read_text(encoding='utf-8-sig'))),
                                  ROOT / 'config/profiles', ROOT / 'assets/image', True))
     base = json.loads((ROOT/'config/profiles/dungeon_unlimited.json').read_text(encoding='utf-8-sig'))
     for task in plan['tasks']:

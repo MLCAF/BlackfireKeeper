@@ -48,6 +48,10 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(set(background), {'vendor_core/backend.py'})
         self.assertFalse(set(patches) & set(background))
         patches.update(background)
+        late = json.loads((ROOT/'tests/vendor_patches_late_dungeons.json').read_text(encoding='utf-8'))
+        self.assertEqual(set(late), {'vendor_core/unified.py'})
+        self.assertFalse(set(patches) & set(late))
+        patches.update(late)
         for entry in manifest:
             # Editable user plan is deliberately not frozen after migration.
             if entry['target']=='config/dungeon_plan.json': continue
@@ -73,10 +77,12 @@ class MigrationTests(unittest.TestCase):
             if task['order']>1:self.assertNotIn('副本入口标题.png',json.dumps(built,ensure_ascii=False))
         self.assertEqual(base,original)
 
-    def test_only_first_dungeon_supported_and_seventh_rejected(self):
+    def test_first_and_seventh_supported_but_missing_entry_rejected(self):
         for task in self.plan['tasks'][1:]:task['enabled']=False
         validate_dungeon_plan(self.plan,ROOT/'config/profiles',ROOT/'assets/image',True)
         self.plan['tasks'][6]['enabled']=True
+        validate_dungeon_plan(self.plan,ROOT/'config/profiles',ROOT/'assets/image',True)
+        self.plan['tasks'][6]['entrance_template']=None
         with self.assertRaises(ValueError):validate_dungeon_plan(self.plan,ROOT/'config/profiles',ROOT/'assets/image',True)
 
     def test_per_dungeon_buff_isolated(self):

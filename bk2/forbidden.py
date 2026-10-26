@@ -1,4 +1,4 @@
-"""Bounded, single-submit Golden Kingdom automation, independent of dungeon state."""
+"""Bounded Golden Kingdom automation, independent of dungeon state."""
 from collections import deque
 from dataclasses import dataclass
 import threading
@@ -56,7 +56,9 @@ class ForbiddenFlow:
     """Only positive successor observations discharge an input reservation.
 
     step receives a scene already confirmed on two fresh frames. A returned
-    action is reserved BEFORE sending input; no timeout retries that action.
+    action is reserved BEFORE sending input. Only positively re-observed reward
+    panels and an OFF auto toggle permit bounded retries; never retry exploration
+    or chest purchases, and never extend a deadline because input did not land.
     """
     def __init__(self, options, now):
         self.options = options.validate()
@@ -69,13 +71,23 @@ class ForbiddenFlow:
         self.auto_submitted = False
         self.auto_attempts = 0
         self.auto_last_submit = 0.
+        self.reward_kind = None
+        self.reward_attempts = 0
+        self.reward_last_submit = 0.
+
+    def submit_reward(self, kind, phase, now):
+        self.reward_kind = kind
+        self.reward_attempts = 1
+        self.reward_last_submit = now
+        self.move(phase, now)
+        return kind
 
     def move(self, phase, now, seconds=30):
         self.phase, self.deadline = phase, now+seconds
 
     def check_time(self, now):
         if not self.done and now >= self.deadline:
-            raise TimeoutError(f'禁域 {LABELS[self.phase]} 等待超时；未重复点击，请检查诊断')
+            raise TimeoutError(f'禁域 {LABELS[self.phase]} 等待超时；已停止进一步点击，请检查诊断')
 
     def step(self, kind, clickable, stamina, now):
         self.check_time(now)
@@ -83,6 +95,12 @@ class ForbiddenFlow:
             return None
         if kind == 'defeat':
             raise RuntimeError('禁域战斗失败，已停止；请手动处理战败页面')
+        if (self.phase in ('xp_wait', 'loot_wait', 'resume_xp', 'resume_loot')
+                and kind == self.reward_kind and clickable
+                and self.reward_attempts < 3 and now-self.reward_last_submit >= 4):
+            self.reward_attempts += 1
+            self.reward_last_submit = now
+            return kind
         if self.phase == 'navigation_wait':
             if kind not in self.expected:
                 return None
@@ -93,8 +111,7 @@ class ForbiddenFlow:
             elif kind in ('xp', 'loot') and clickable:
                 # An interrupted run can leave a foreground reward panel.
                 # Claim only that verified panel; do not credit a new round.
-                self.move('resume_xp' if kind == 'xp' else 'resume_loot', now)
-                return kind
+                return self.submit_reward(kind, 'resume_xp' if kind == 'xp' else 'resume_loot', now)
             elif clickable and kind in ('welcome','home','menu','map','detail'):
                 self.expected = {'welcome':{'home'}, 'home':{'menu','map'}, 'menu':{'map','detail'},
                                  'map':{'detail'}, 'detail':{'explore'}}[kind]
@@ -104,8 +121,7 @@ class ForbiddenFlow:
                 # Starting inside a battle or chest modal lacks map ownership.
                 return None
         if self.phase == 'resume_xp' and kind == 'loot' and clickable:
-            self.move('resume_loot', now)
-            return 'loot'
+            return self.submit_reward('loot', 'resume_loot', now)
         if self.phase == 'resume_loot' and kind == 'explore':
             self.move('ready', now)
             return None
@@ -142,12 +158,10 @@ class ForbiddenFlow:
                 if kind == 'auto_on' and self.phase == 'auto_wait':
                     self.move('battle', now, 180)
             elif kind == 'xp' and clickable:
-                self.move('xp_wait', now)
-                return 'xp'
+                return self.submit_reward('xp', 'xp_wait', now)
             elif kind == 'loot' and clickable:
                 # Very fast battles may finish before the first battle sample.
-                self.move('loot_wait', now)
-                return 'loot'
+                return self.submit_reward('loot', 'loot_wait', now)
             elif self.phase == 'encounter' and kind == 'chest_free' and clickable:
                 self.move('chest_wait', now, 20)
                 return 'chest_free'
@@ -160,8 +174,7 @@ class ForbiddenFlow:
                 return 'chest_claimed'
         elif self.phase == 'xp_wait':
             if kind == 'loot' and clickable:
-                self.move('loot_wait', now)
-                return 'loot'
+                return self.submit_reward('loot', 'loot_wait', now)
         elif self.phase in ('chest_return','loot_wait') and kind == 'explore':
             self.completed += 1
             self.move('ready', now)
@@ -210,18 +223,21 @@ class ForbiddenRunner:
                         break
                     action = self.flow.step(kind, match is not None, self.read_stamina(), self.clock())
                     if action:
-                        if action == 'auto_off':
-                            # The toggle can change after the two-frame vote.
-                            # Recheck on another fresh capture immediately before input.
+                        if action in ('auto_off', 'xp', 'loot'):
+                            # Toggles/reward panels can change after the vote.
+                            # Never let a late retry land on the successor page.
                             frame = self.backend.capture(self.stop_event)
                             self.emit('image', frame)
                             fresh_kind, match = vision.observe(frame)
-                            if fresh_kind != 'auto_off' or match is None:
+                            if (fresh_kind != action or match is None
+                                    or self.stop_event.is_set() or not self.backend.capture_is_fresh()):
                                 stable, previous = 0, None
                                 continue
                         # Classification and context were both rechecked on this
                         # capture, and the backend rechecks age/identity at input.
-                        self.emit('log', f'禁域：{LABELS[action]}，等待确认下一页面')
+                        attempt = (f'（第 {self.flow.reward_attempts}/3 次）'
+                                   if action in ('xp', 'loot') else '')
+                        self.emit('log', f'禁域：{LABELS[action]}{attempt}，等待确认下一页面')
                         self.backend.click(match, CLICK_OFFSETS.get(action,(0,0)),
                                            self.stop_event, threading.Event())
                         self.stats.clicks += 1

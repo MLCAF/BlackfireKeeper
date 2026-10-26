@@ -42,6 +42,11 @@ class ForbiddenVision:
                     result=self.backend.recognize(image,dict(RULES[name],template=template),self.stop)
                     if result:
                         return result
+            # Captured darker Continue state. It is only queried after a reward
+            # title matches; retain the same threshold and dim-overlay rejection.
+            if name == 'continue':
+                return self.backend.recognize(image, dict(RULES[name],
+                    template='forbidden/continue_dark_1920.png'), self.stop)
             return None
 
         # Foreground modals take priority over dimmed exploration controls.

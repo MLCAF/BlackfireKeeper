@@ -1,0 +1,38 @@
+[
+  {
+    "order": 8,
+    "title": "巨龙巢穴",
+    "template": "八本名称.png",
+    "crop": [
+      300,
+      445,
+      166,
+      28
+    ],
+    "sha256": "415f68c03bdfca641a02eae6c08e6234b380d6f8f57b160b7e8eb6518c752510"
+  },
+  {
+    "order": 9,
+    "title": "古老墓穴",
+    "template": "九本名称.png",
+    "crop": [
+      674,
+      445,
+      167,
+      28
+    ],
+    "sha256": "2798c4eb383d87c36b2d2f69c4dfb96f0ca4aec43f4277accb15065d19e7ac87"
+  },
+  {
+    "order": 10,
+    "title": "地狱深渊",
+    "template": "十本名称.png",
+    "crop": [
+      1047,
+      445,
+      166,
+      28
+    ],
+    "sha256": "562cb710204e72b10b797d5644d01f4bf6aef52d225b8cad60b61930ad5b8658"
+  }
+]

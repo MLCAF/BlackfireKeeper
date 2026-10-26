@@ -3,6 +3,7 @@ import copy
 
 from vendor_core.list_cooldown import ListCooldownScanner as BaseScanner
 from vendor_core.list_cooldown import list_navigation_profile as base_navigation
+from .plan import BUNDLED_LATE_DUNGEONS
 
 LIST_RULE = dict(name='无遮挡且已选中的地下城导航', template='地下城导航选中.png',
                  roi=[400, 560, 350, 160], threshold=.95,
@@ -31,6 +32,16 @@ def list_navigation_profile(base, task, tasks):
 
 
 class ListCooldownScanner(BaseScanner):
+    def __init__(self, backend, tasks, *args, **kwargs):
+        super().__init__(backend, tasks, *args, **kwargs)
+        # Extend the upstream six-dungeon scanner with the bundled late entrances.
+        # No ready-door fallback: absent OCR is still unknown, never proof of ready.
+        self.tasks.extend(t for t in tasks if t.get('order') in BUNDLED_LATE_DUNGEONS
+                          and t.get('id') == f"dungeon_{t['order']}"
+                          and t.get('entrance_template') == BUNDLED_LATE_DUNGEONS[t['order']][0]+'名称.png')
+        self.tasks.sort(key=lambda task: task['order'])
+        self.selected = [t for t in self.tasks if t['enabled'] and not t['fallback']]
+
     def capture(self):
         if not self.active():
             return None

@@ -26,7 +26,7 @@ def main():
         app.select_dungeons('first')
         assert [t['order'] for t in app.collect_plan()['tasks'] if t['enabled']] == [1]
         app.select_dungeons('all')
-        assert not app.task_flags['dungeon_7'].get()
+        assert app.task_flags['dungeon_7'].get()
         app.select_dungeons('none')
         assert not any(t['enabled'] for t in app.collect_plan()['tasks'])
         app.task_flags['dungeon_2'].set(True)
@@ -68,7 +68,7 @@ def main():
         app.drain();root.update()
         assert app.task_rows['dungeon_1'][0].get() == '可进入'
         assert app.task_rows['dungeon_2'][0].get() == '冷却中'
-        assert app.task_rows['dungeon_7'][0].get() == '缺少入口图'
+        assert app.task_rows['dungeon_7'][0].get() == '未知'
         assert ':' in app.diamond_text.get()
         assert str(app.run_button.cget('state')) == 'normal'
         checks['live_countdown_layout'] = True

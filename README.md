@@ -1,14 +1,14 @@
 # 黑火守望（BlackfireKeeper）
 
-**[下载 Windows x64 便携 EXE 版 · v0.8.3（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.3/BlackfireKeeper-v0.8.3-windows-x64.zip)**
+**[下载 Windows x64 便携 EXE 版 · v1.0.0（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.0/BlackfireKeeper-v1.0.0-windows-x64.zip)**
 
-[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v0.8.3) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v0.8.3/BlackfireKeeper-v0.8.3-windows-x64.zip.sha256)
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v1.0.0) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.0/BlackfireKeeper-v1.0.0-windows-x64.zip.sha256)
 
 完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
 
-当前公开测试版：**黑火守望 v0.8.3**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v1.0.0**（首次公开测试版为 v0.1.0）。
 
-v0.8.3 修复从禁域列表启动地下城 / 领取任务时的 Boundary 超时，以及标准窗口宝箱已领取却等待超时的问题。识别阈值、付费保护、后台点击与现有定时关机行为保持不变。见 [版本说明](RELEASE_v0.8.3.md)。
+v1.0.0 新增七至十本入口和冷却识别，修复禁域经验／战利品结算等待超时，并说明如何从界面打开诊断目录和上传完整 ZIP。七本已由用户验证完整流程；八至十本已通过截图回放，完整战斗仍待用户验证。版本号按用户要求进入 v1 系列，验证范围以 [版本说明](RELEASE_v1.0.0.md) 为准。
 
 ## 参考项目与致谢
 
