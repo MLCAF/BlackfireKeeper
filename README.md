@@ -1,14 +1,14 @@
 # 黑火守望（BlackfireKeeper）
 
-**[下载 Windows x64 便携 EXE 版 · v1.0.1（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.1/BlackfireKeeper-v1.0.1-windows-x64.zip)**
+**[下载 Windows x64 便携 EXE 版 · v1.0.2（完整 ZIP）](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.2/BlackfireKeeper-v1.0.2-windows-x64.zip)**
 
-[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v1.0.1) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.1/BlackfireKeeper-v1.0.1-windows-x64.zip.sha256)
+[版本说明与附件](https://github.com/MLCAF/BlackfireKeeper/releases/tag/v1.0.2) · [SHA-256 校验文件](https://github.com/MLCAF/BlackfireKeeper/releases/download/v1.0.2/BlackfireKeeper-v1.0.2-windows-x64.zip.sha256)
 
 完整解压 ZIP，再双击 `BlackfireKeeper.exe`，无需安装 Python。请保留同目录的 `_internal`、`assets` 等文件，不能只复制 EXE。升级时保留自己的 `config/dungeon_plan.json` 和 `config/runtime/`。GitHub 自动生成的 “Source code” 压缩包是源码版。
 
-当前公开测试版：**黑火守望 v1.0.1**（首次公开测试版为 v0.1.0）。
+当前公开测试版：**黑火守望 v1.0.2**（首次公开测试版为 v0.1.0）。
 
-v1.0.1 新增七至十本入口和冷却识别，修复禁域经验／战利品结算等待超时，并说明如何从界面打开诊断目录和上传完整 ZIP。七本已由用户验证完整流程；八至十本已通过截图回放，完整战斗仍待用户验证。版本号按用户要求进入 v1 系列，验证范围以 [版本说明](RELEASE_v1.0.1.md) 为准。
+v1.0.2 修复八本、九本在 1920×991 实际画面中漏识别并反复重置列表的问题。补充真实截图兼容模板，保留 0.95 阈值、导航校验和冷却保护。两张实际截图回放已覆盖；完整战斗流程仍待用户验证。见 [版本说明](RELEASE_v1.0.2.md)。
 
 ## 参考项目与致谢
 
@@ -132,7 +132,7 @@ $env:BLACKFIRE_EXE = 'D:\Games\Blackfire Crusade\Blackfire Crusade.exe'
 .\.venv\Scripts\python.exe -X utf8 -m bk2 --version
 ```
 
-版本递增约定：`v0.1.1` 一类补丁号用于修复识别失败、卡住等问题；`v0.2.0` 一类次版本用于新增功能；核心功能和安装流程达到稳定发布标准后再使用 `v1.0.1`。每次发布更新版本定义，Git 标签与代码版本一致，已经发布的标签不覆盖。CI 会检查标签与代码是否一致。当前仍为公开测试版，版本号不代表全部游戏场景都已验证。
+版本递增约定：`v0.1.1` 一类补丁号用于修复识别失败、卡住等问题；`v0.2.0` 一类次版本用于新增功能；核心功能和安装流程达到稳定发布标准后再使用 `v1.0.2`。每次发布更新版本定义，Git 标签与代码版本一致，已经发布的标签不覆盖。CI 会检查标签与代码是否一致。当前仍为公开测试版，版本号不代表全部游戏场景都已验证。
 
 当前内存布局仅核验过 SHA-256 为下列值的游戏 EXE：
 

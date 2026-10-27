@@ -4,6 +4,10 @@ import copy
 # Each fallback is confined to the relevant part of the normalized 720px frame.
 # These are captured UI variants, not a general relaxation of matching thresholds.
 SCENE_VARIANTS = {
+    # Actual 1920x991 portable captures, already normalized by Maa to 1395x720.
+    # Keep the old crops for older captures; do not rescale the screenshot again.
+    '八本名称.png': ('八本名称1920兼容.png', [0, 440, 1395, 110]),
+    '九本名称.png': ('九本名称1920兼容.png', [0, 440, 1395, 110]),
     '未完成地下城提示.png': ('未完成地下城提示兼容.png', [500, 290, 400, 100]),
     '重连登录标识.png': ('重连登录标识兼容.png', [500, 200, 400, 180]),
     '主界面锚点.png': ('主界面锚点兼容.png', [200, 120, 350, 300]),
